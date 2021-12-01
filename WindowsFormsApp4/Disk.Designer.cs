@@ -90,6 +90,7 @@ namespace DiskTest11
             // TestDataMode
             // 
             this.TestDataMode.BackColor = System.Drawing.SystemColors.ScrollBar;
+            this.TestDataMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.TestDataMode.FormattingEnabled = true;
             this.TestDataMode.Items.AddRange(new object[] {
             "全0",
@@ -129,7 +130,9 @@ namespace DiskTest11
             // TestMode
             // 
             this.TestMode.BackColor = System.Drawing.SystemColors.ScrollBar;
+            this.TestMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.TestMode.FormattingEnabled = true;
+            this.TestMode.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.TestMode.Items.AddRange(new object[] {
             "随机读写验证",
             "随机只读",
