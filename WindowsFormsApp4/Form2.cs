@@ -11,7 +11,7 @@ using System.Windows.Forms;
 namespace DiskTest11
 {
     //public delegate void PercentHandler(int now);
-
+    //测试
     public partial class Form2 : Sunny.UI.UIAsideMainFrame
     {
         private DiskSetting diskSetting;
