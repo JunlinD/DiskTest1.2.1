@@ -398,7 +398,7 @@ namespace DiskTest11
             TestArray = new byte[DEAFAUT_BLOCKSIZE * block_size];
             CompareArray = new byte[DEAFAUT_BLOCKSIZE * block_size];
             //long actual_size = ((driver.DiskInformation.DiskSectorSize / block_size)*percent)/100;
-            long actual_size = 10;
+            long actual_size = driver.DiskInformation.DiskSectorSize * percent / 100;
             long start_time = Environment.TickCount;
             long speed_start = start_time;//测试读写速度
             long speed_end;
@@ -572,7 +572,8 @@ namespace DiskTest11
             DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
             CompareArray = new byte[DEAFAUT_BLOCKSIZE * block_size];
             //long actual_size = ((driver.DiskInformation.DiskSectorSize / block_size)*percent)/100;
-            long actual_size = 10;
+            //long actual_size = 10;
+            long actual_size = driver.DiskInformation.DiskSectorSize * percent / 100;
             long speed_start = start_time;//测试读写速度
             long speed_end;
             long _MB_num = 0;
@@ -812,6 +813,7 @@ namespace DiskTest11
                     if (end_time - start_time >= test_time)
                         break;
                 }
+                this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                 Console.WriteLine("随机只写测试完成，测试了" + test_time + "毫秒！");
                 this.PrintLog("随机只写测试完成，测试了" + test_time + "毫秒！");
             }
@@ -841,6 +843,7 @@ namespace DiskTest11
                     }
                     temp_num++;
                 }
+                this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                 Console.WriteLine("随机只写测试完成，测试了" + test_num + "次！");
                 this.PrintLog("随机只写测试完成，测试了" + test_num + "次！");
             }
