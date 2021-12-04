@@ -24,19 +24,22 @@ namespace DiskTest11
         private const int DEAFAUT_BLOCKSIZE = 512;
 
         /// <summary>
-        /// 委托事件的定义
+        /// 声明委托对象
         /// </summary>
         public NotifyEventHandler NotifyEvent;//进度条,速度等信息
         public SwitchEventHandler SwitchEvent;//切换界面
         public LogEventHandler LogEvent;//日志打印
         public StartTimeEventHandler StartTimeEvent;//传递开始时间
 
-        public Disk[] Ed = new Disk[3]; //创建用户控件，显示硬盘的控件
+        public int now_index_framework=0;
 
-        public ArrayList Disk_Informaion_List = new ArrayList();
+        public Disk[] Ed; //创建用户控件，显示硬盘的控件
+
         public ArrayList Disk_Driver_List = new ArrayList();
         public ArrayList Disk_Choose_Information = new ArrayList();
+        public ArrayList Disk_Choose_Information_List = new ArrayList();//新的choose数组
         public ArrayList Disk_Information_List = new ArrayList();
+        public ChooseInformation Temp_Choose=new ChooseInformation();//临时choose变量
         public WriteBlockCompleteHandler GetWriteSpeed;
         public ReadBlockComleteHandler GetReadSpeed;
         /// <summary>
@@ -46,18 +49,69 @@ namespace DiskTest11
         private byte[] CompareArray;              
         public DiskSetting()
         {
+            
             InitializeComponent();
             Init_Disk_Information();
+            Init_Disk_Framework();
+            Init_Choose_ArrayList();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;            
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(134)));
-            dataGridView1.Rows.Add();
-            dataGridView1.Rows.Add();
-            Ed[0] = new Disk();
-            Ed[1] = new Disk();
-            Ed[2] = new Disk();
-            Ed[0].TransfEvent += Get_Disk_Information_Event;
-            Ed[0].Show();
-            panel1.Controls.Add(Ed[0]);
+            Show_Disk();
+            //缺陷，一条路到黑，如果不行，该如何更新当前状态
+            /*Ed[0].TransfChooseINF += Get_Transf_Choose_INF_Event;
+            if(Disk_Choose_Information_List.Count>0||Temp_Choose!=null)
+            {
+                Disk_Choose_Information_List[0] = Temp_Choose;
+            }
+            else
+            {
+                MessageBox.Show("测试项为空--Temp_Choose==null");
+            }*/
+            for(int i=0;i<Disk_Information_List.Count;i++)
+            {
+                Ed[i].TransfChooseINF += Get_Transf_Choose_INF_Event;
+            }
+            if (Disk_Choose_Information_List.Count > 0 || Temp_Choose != null)
+            {
+                Disk_Choose_Information_List[0] = Temp_Choose;
+            }
+            else
+            {
+                MessageBox.Show("测试项为空--Temp_Choose==null");
+            }
+            //Ed[0].Show();
+            //panel1.Controls.Add(Ed[0]);
+        }
+        public void Init_Disk_Framework()
+        {
+            if(Disk_Information_List.Count>0)
+            {
+                Ed = new Disk[Disk_Information_List.Count];
+                for(int i=0;i<Disk_Information_List.Count;i++)
+                {
+                    Ed[i] = new Disk();
+                }
+            }
+        }
+        public void  Init_Choose_ArrayList()
+        {
+            if(Disk_Information_List.Count>0)
+            {
+                for(int i=0;i<Disk_Information_List.Count;i++)
+                {
+                    ChooseInformation choose = new ChooseInformation();
+                    Disk_Choose_Information_List.Add(choose);
+                }
+            }
+        }
+        
+        public void Show_Disk()
+        {
+            if(Ed!=null)
+            {
+                Ed[0].Show();
+                panel1.Controls.Add(Ed[0]);
+            }
         }
         //增添Notify观察者对象
         public void AddNotifyObserver(NotifyEventHandler observer)
@@ -139,16 +193,20 @@ namespace DiskTest11
         {
             Disk_Information_List = value;
         }
-        
+        public void Get_Transf_Choose_INF_Event(ChooseInformation choose)
+        {
+            Temp_Choose = choose;
+            Disk_Choose_Information_List[now_index_framework] = choose;
+        }
         private void Start_Test(Object obj)
         {
-            if (Disk_Choose_Information.Count <= 0)
+            if (Disk_Choose_Information_List.Count <= 0)
             {
                 MessageBox.Show("测试信息数组为空");
             }
-            for (int i = 0; i < Disk_Choose_Information.Count; i++)
+            for (int i = 0; i < Disk_Choose_Information_List.Count; i++)
             {
-                ChooseInformation chooseInformation = (ChooseInformation)Disk_Choose_Information[i];
+                ChooseInformation chooseInformation = (ChooseInformation)Disk_Choose_Information_List[i];
                 DriverLoader driverLoader = (DriverLoader)Disk_Driver_List[i];
                 if (chooseInformation.TestOrNot == true)
                 {
@@ -181,10 +239,10 @@ namespace DiskTest11
                         MessageBox.Show("测试模式错误！");
                     }
                 }
-                else
-                {
-                    MessageBox.Show("该磁盘无法进行测试，请检查选项");
-                }
+                //else
+                //{
+                //    MessageBox.Show("该磁盘无法进行测试，请检查选项");
+               // }
             }
         }
         /// <summary>
@@ -196,7 +254,7 @@ namespace DiskTest11
         {
 
             Init_Disk_Driver();
-            Init_Test_Parameters();
+            //Init_Test_Parameters();
             GetWriteSpeed = OutWriteSpeed;
             System.Threading.Thread thr = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(Start_Test));
             thr.Start();
@@ -208,14 +266,14 @@ namespace DiskTest11
         /// </summary>
         public void Init_Disk_Driver()
         {
-            if (Disk_Informaion_List.Count <= 0)
+            if (Disk_Information_List.Count <= 0)
             {
                 MessageBox.Show("未检测到设备！");
                 return;
             }
-            for (int i = 0; i < Disk_Informaion_List.Count; i++)
+            for (int i = 0; i < Disk_Information_List.Count; i++)
             {
-                DiskInformation information = (DiskInformation)Disk_Informaion_List[i];
+                DiskInformation information = (DiskInformation)Disk_Information_List[i];
                 DriverLoader driver = new DriverLoader(information);
                 Disk_Driver_List.Add(driver);
             }
@@ -283,7 +341,7 @@ namespace DiskTest11
                         //long size = Convert.ToInt64(size_s);
                         DiskInformation d = new DiskInformation(name, sector_size, size, id++);
                         this.addColumn(name, size, sector_size);
-                        Disk_Informaion_List.Add(d);
+                        Disk_Information_List.Add(d);
 
                     }
                     catch (Exception ex)
@@ -313,12 +371,12 @@ namespace DiskTest11
         /// <param name="sectorsize">扇区数</param>
         public void addColumn(string name, decimal size, long sectorsize)
         {
-            int index = this.dataGridView1.Rows.Add();
-            dataGridView1.Rows[index].Cells[0].Value = name;
-            dataGridView1.Rows[index].Cells[1].Value = size;
-            dataGridView1.Rows[index].Cells[2].Value = "";
-            dataGridView1.Rows[index].Cells[3].Value = sectorsize;
-            dataGridView1.Rows[index].Cells[4].Value = "512B";
+            int index = this.Disk_Information_Framework.Rows.Add();
+            Disk_Information_Framework.Rows[index].Cells[0].Value = name;
+            Disk_Information_Framework.Rows[index].Cells[1].Value = size;
+            Disk_Information_Framework.Rows[index].Cells[2].Value = "";
+            Disk_Information_Framework.Rows[index].Cells[3].Value = sectorsize;
+            Disk_Information_Framework.Rows[index].Cells[4].Value = "512B";
 
         }
         /// <summary>
@@ -721,9 +779,20 @@ namespace DiskTest11
             //-----
             return myResult;
         }
+        /// <summary>
+        /// 硬盘数据点击事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            switch (e.RowIndex)
+            Ed[e.RowIndex].Show();
+            //Ed[e.RowIndex].TransfChooseINF += Get_Transf_Choose_INF_Event;
+            //Disk_Choose_Information_List[e.RowIndex] = Temp_Choose;
+            panel1.Controls.Clear();
+            panel1.Controls.Add(Ed[e.RowIndex]);
+            now_index_framework = e.RowIndex;
+            /*switch (e.RowIndex)
             {
                 case 0:
                     Ed[0].Show();
@@ -743,7 +812,7 @@ namespace DiskTest11
                     panel1.Controls.Clear();
                     panel1.Controls.Add(Ed[2]);
                     break;
-            }
+            }*/
         }
 
         
