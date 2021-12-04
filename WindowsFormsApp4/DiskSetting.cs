@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Linq;
 using System.Management;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -31,7 +32,11 @@ namespace DiskTest11
         public LogEventHandler LogEvent;//日志打印
         public StartTimeEventHandler StartTimeEvent;//传递开始时间
 
-        public int now_index_framework=0;
+        public int now_index_framework=0;//当前点击的硬盘项
+
+        public bool Test_Status;//当前测试状态，是停止，还是继续；
+        private static AutoResetEvent resetEvent = new AutoResetEvent(true);
+
 
         public Disk[] Ed; //创建用户控件，显示硬盘的控件
 
@@ -54,6 +59,7 @@ namespace DiskTest11
             Init_Disk_Information();
             Init_Disk_Framework();
             Init_Choose_ArrayList();
+            Test_Status = true;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;            
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(134)));
             Show_Disk();
@@ -198,6 +204,22 @@ namespace DiskTest11
             Temp_Choose = choose;
             Disk_Choose_Information_List[now_index_framework] = choose;
         }
+        /// <summary>
+        /// 获取Stop按钮的信息，并改变当前的Test_Status，判断是暂停还是恢复
+        /// </summary>
+        /// <param name="status">Stop按钮传过来的状态参数</param>
+        public void Get_Stop_Button_Status_Event(bool status)
+        {
+           if(Test_Status==false&&status==true)//当前是暂停，要恢复
+           {
+                Test_Status = status;
+                resetEvent.Set();
+           }
+            else
+            {
+                Test_Status = status;
+            }
+        }
         private void Start_Test(Object obj)
         {
             if (Disk_Choose_Information_List.Count <= 0)
@@ -254,7 +276,6 @@ namespace DiskTest11
         {
 
             Init_Disk_Driver();
-            //Init_Test_Parameters();
             GetWriteSpeed = OutWriteSpeed;
             System.Threading.Thread thr = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(Start_Test));
             thr.Start();
@@ -502,6 +523,11 @@ namespace DiskTest11
                 Init_TestArray(block_size, test_data_mode);
                 for (long i = 0; i < actual_size;)
                 {
+                    //添加状态判断语句
+                    if (Test_Status==false)
+                    {
+                        resetEvent.WaitOne();                        
+                    }
                     //由于最后一个块比较大，最后一个块判断不能执行之后，将会有大量的块无法执行。
 
                     driver.WritSector(TestArray, i, block_size);

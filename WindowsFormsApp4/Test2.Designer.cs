@@ -163,9 +163,14 @@ namespace DiskTest11
             this.StopButton.MinimumSize = new System.Drawing.Size(1, 1);
             this.StopButton.Name = "StopButton";
             this.StopButton.Radius = 50;
+            this.StopButton.RectHoverColor = System.Drawing.Color.Red;
+            this.StopButton.RectPressColor = System.Drawing.Color.Red;
+            this.StopButton.RectSelectedColor = System.Drawing.Color.Red;
             this.StopButton.Size = new System.Drawing.Size(160, 108);
+            this.StopButton.Style = Sunny.UI.UIStyle.Custom;
             this.StopButton.TabIndex = 21;
             this.StopButton.Text = "Stop";
+            this.StopButton.Click += new System.EventHandler(this.StopButton_Click);
             // 
             // uiFlowLayoutPanel1
             // 

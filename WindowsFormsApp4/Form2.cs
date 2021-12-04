@@ -28,6 +28,7 @@ namespace DiskTest11
             diskSetting.AddNotifyObserver(new NotifyEventHandler(test2.ReceiveEvent));
             diskSetting.AddSwitchObserver(new SwitchEventHandler(Aside.SelectPage));
             diskSetting.AddLogObserver(new LogEventHandler(log.LogEvent));
+            test2.addStopTestOberver(new StopTestEventHandler(diskSetting.Get_Stop_Button_Status_Event));
             diskSetting.AddStartTimeObserver(new StartTimeEventHandler(test2.GetStartTimeEvent));
             TreeNode parent = Aside.CreateNode("Setting", pageIndex);
             Aside.CreateChildNode(parent, AddPage(diskSetting, ++pageIndex));

@@ -10,17 +10,35 @@ using System.Windows.Forms;
 
 namespace DiskTest11
 {
-   
 
+    public delegate void StopTestEventHandler(bool status);
     public partial class Test2 : Sunny.UI.UIPage
     {
+        private bool Stop_Button_Status;
         //public PercentHandler GetPercent;
         private delegate void ReceiveEventHandler(int now, double speed, double written_MB,string now_time);
         private delegate void GetStartTimeEventHandler(string s);
+        public StopTestEventHandler StopTestEvent;
         public Test2()
         {
+            Stop_Button_Status = false;
             InitializeComponent();
 
+        }
+        public void addStopTestOberver(StopTestEventHandler stopTestEvent)
+        {
+            StopTestEvent += stopTestEvent;
+        }
+        public void remoteStopTestOberver(StopTestEventHandler stopTestEvent)
+        {
+            StopTestEvent -= stopTestEvent;
+        }
+        public void PublishStopTest(bool status)
+        {
+            if(StopTestEvent!=null)
+            {
+                StopTestEvent(status);
+            }
         }
         public void ReceiveEvent(int now, double speed, double written_MB,string now_time)
         {
@@ -71,6 +89,23 @@ namespace DiskTest11
         private void uiGroupBox1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void StopButton_Click(object sender, EventArgs e)
+        {
+            if(Stop_Button_Status==false)//假如这时候还没有被点击
+            {
+                PublishStopTest(Stop_Button_Status);//广播状态，暂停测试线程的执行,将false传给DiskSetting
+                Stop_Button_Status = true;
+                this.StopButton.Text = "Start";
+                
+            }
+            else
+            {
+                PublishStopTest(Stop_Button_Status);
+                Stop_Button_Status = false;
+                this.StopButton.Text = "Stop";
+            }
         }
     }
 }
