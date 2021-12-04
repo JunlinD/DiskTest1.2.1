@@ -10,7 +10,10 @@ using System.Windows.Forms;
 
 namespace DiskTest11
 {
-
+    /// <summary>
+    /// 传递点击按钮状态的委托
+    /// </summary>
+    /// <param name="status"></param>
     public delegate void StopTestEventHandler(bool status);
     public partial class Test2 : Sunny.UI.UIPage
     {
@@ -33,6 +36,10 @@ namespace DiskTest11
         {
             StopTestEvent -= stopTestEvent;
         }
+        /// <summary>
+        /// 传递点击按钮的状态
+        /// </summary>
+        /// <param name="status">点击按钮的状态</param>
         public void PublishStopTest(bool status)
         {
             if(StopTestEvent!=null)
