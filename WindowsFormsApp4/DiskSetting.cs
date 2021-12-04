@@ -239,10 +239,10 @@ namespace DiskTest11
                         MessageBox.Show("测试模式错误！");
                     }
                 }
-                //else
-                //{
-                //    MessageBox.Show("该磁盘无法进行测试，请检查选项");
-               // }
+                else
+                {
+                    MessageBox.Show("该磁盘无法进行测试，请检查选项");
+                }
             }
         }
         /// <summary>
@@ -429,8 +429,8 @@ namespace DiskTest11
                 this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                 if (error_num == 0)
                 {
-                    Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "次未发生错误！");
-                    this.PrintLog("顺序读写测试完成，测试了" + actual_size + "次未发生错误！");
+                    Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                    this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
                 }
             }
             else if (test_data_mode == 2)
@@ -457,8 +457,13 @@ namespace DiskTest11
                 this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                 if (error_num == 0)
                 {
-                    Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "次未发生错误！");
-                    this.PrintLog("顺序读写测试完成，测试了" + actual_size + "次未发生错误！");
+                    Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                    this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                }
+                else
+                {
+                    Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个扇区出现了"+error_num+"个错误！");
+                    this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个扇区出现了" + error_num + "个错误！");
                 }
             }
             else
@@ -656,6 +661,11 @@ namespace DiskTest11
                     Console.WriteLine("随机读写验证测试完成，测试了" + test_time + "毫秒未发生错误！");
                     this.PrintLog("随机读写验证测试完成，测试了" + test_time + "毫秒未发生错误！");
                 }
+                else
+                {
+                    Console.WriteLine("随机读写验证测试完成，测试了" + test_time + "毫秒出现了" + error_num + "个错误！");
+                    this.PrintLog("随机读写验证测试完成，测试了" + test_time + "毫秒出现了" + error_num + "个错误！");
+                }
             }
             else if (test_time == 0)
             {
@@ -696,6 +706,11 @@ namespace DiskTest11
                 {
                     Console.WriteLine("随机读写验证测试完成，测试了" + test_num + "次未发生错误！");
                     this.PrintLog("随机读写验证测试完成，测试了" + test_num + "次未发生错误！");
+                }
+                else
+                {
+                    Console.WriteLine("随机读写验证测试完成，测试了" + test_num + "次出现了" + error_num + "个错误！");
+                    this.PrintLog("随机读写验证测试完成，测试了" + test_num + "次出现了" + error_num + "个错误！");
                 }
             }
         }
@@ -891,8 +906,8 @@ namespace DiskTest11
             {
                 if (testarray[i] != comparearray[i])
                 {
-                    Console.WriteLine("当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
-                    this.PrintLog("当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
+                    Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss")+"当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
+                    this.PrintLog(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss")+"当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
                     error_num++;
                 }
             }
@@ -928,27 +943,7 @@ namespace DiskTest11
             panel1.Controls.Clear();
             panel1.Controls.Add(Ed[e.RowIndex]);
             now_index_framework = e.RowIndex;
-            /*switch (e.RowIndex)
-            {
-                case 0:
-                    Ed[0].Show();
-                    Ed[0].TransfEvent += Get_Disk_Information_Event;
-                    panel1.Controls.Clear();
-                    panel1.Controls.Add(Ed[0]);
-                    break;
-                case 1:
-                    Ed[1].Show();
-                    Ed[1].TransfEvent += Get_Disk_Information_Event;
-                    panel1.Controls.Clear();
-                    panel1.Controls.Add(Ed[1]);
-                    break;
-                case 2:
-                    Ed[2].Show();
-                    Ed[1].TransfEvent += Get_Disk_Information_Event;
-                    panel1.Controls.Clear();
-                    panel1.Controls.Add(Ed[2]);
-                    break;
-            }*/
+            
         }
 
         

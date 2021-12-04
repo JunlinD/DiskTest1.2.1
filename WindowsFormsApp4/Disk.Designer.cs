@@ -144,6 +144,7 @@ namespace DiskTest11
             this.TestMode.Name = "TestMode";
             this.TestMode.Size = new System.Drawing.Size(355, 32);
             this.TestMode.TabIndex = 17;
+            this.TestMode.SelectedIndexChanged += new System.EventHandler(this.TestMode_SelectedIndexChanged);
             // 
             // TestTime
             // 

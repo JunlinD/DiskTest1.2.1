@@ -153,5 +153,74 @@ namespace DiskTest11
             TransfChooseINF(choose);
             MessageBox.Show("设置完成");
         }
+        /// <summary>
+        /// 下拉框选中改变选项状态
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TestMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(TestMode.SelectedIndex==0)
+            {
+                TestDataMode.Enabled = false;//测试数据模式
+                TestPercent.Enabled = false;//测试容量
+                BlockSize.Enabled = false;//块大小
+                TestNum.Enabled = true;
+                TestNum.Text = "1000";
+                CircleNumble.Enabled = false;
+                TestTime.Enabled = true;
+            }
+            else if(TestMode.SelectedIndex==1)//随机只读
+            {
+                TestDataMode.Enabled = false;//测试数据模式
+                TestPercent.Enabled = false;//测试容量
+                BlockSize.Enabled = false;//块大小
+                TestNum.Enabled = true;
+                TestNum.Text = "1000";
+                CircleNumble.Enabled = false;
+                TestTime.Enabled = true;
+            }
+            else if(TestMode.SelectedIndex==2)//随机只写
+            {
+                TestDataMode.Enabled = false;//测试数据模式
+                TestPercent.Enabled = false;//测试容量
+                BlockSize.Enabled = false;//块大小
+                TestNum.Enabled = true;
+                TestNum.Text = "1000";
+                CircleNumble.Enabled = false;
+                TestTime.Enabled = true;
+            }
+            else if (TestMode.SelectedIndex == 3)//顺序读写
+            {
+                TestDataMode.Enabled = true;//测试数据模式
+                TestPercent.Enabled = true;//测试容量
+                TestPercent.Text = "100";
+                BlockSize.Enabled = true;//块大小
+                TestNum.Enabled = false;
+                CircleNumble.Enabled = true;//循环次数
+                TestTime.Enabled = false;
+            }
+            else if (TestMode.SelectedIndex == 4)//顺序只读
+            {
+                TestDataMode.Enabled = false;//测试数据模式
+                //TestDataMode.SelectedIndex = 0;
+                TestPercent.Enabled = true;//测试容量
+                TestPercent.Text = "100";
+                BlockSize.Enabled = true;//块大小
+                TestNum.Enabled = false;
+                CircleNumble.Enabled = true;//循环次数
+                TestTime.Enabled = false;
+            }
+            else if (TestMode.SelectedIndex == 5)//顺序只写
+            {
+                TestDataMode.Enabled = true;//测试数据模式
+                TestPercent.Enabled = true;//测试容量
+                TestPercent.Text = "100";
+                BlockSize.Enabled = true;//块大小
+                TestNum.Enabled = false;
+                CircleNumble.Enabled = true;//循环次数
+                TestTime.Enabled = false;
+            }
+        }
     }
 }
