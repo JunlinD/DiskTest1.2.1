@@ -48,11 +48,13 @@ namespace DiskTest11
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.TestOrNot = new System.Windows.Forms.CheckBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.confirm);
             this.groupBox2.Controls.Add(this.TestDataMode);
             this.groupBox2.Controls.Add(this.label7);
@@ -253,6 +255,15 @@ namespace DiskTest11
             this.TestOrNot.UseVisualStyleBackColor = true;
             this.TestOrNot.CheckedChanged += new System.EventHandler(this.TestOrNot_CheckedChanged);
             // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(242, 185);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(32, 24);
+            this.label8.TabIndex = 23;
+            this.label8.Text = "KB";
+            // 
             // Disk
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
@@ -287,5 +298,6 @@ namespace DiskTest11
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox TestOrNot;
         private System.Windows.Forms.Button confirm;
+        private System.Windows.Forms.Label label8;
     }
 }

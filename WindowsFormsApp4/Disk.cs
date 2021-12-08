@@ -20,8 +20,10 @@ namespace DiskTest11
         public event TransfChooseINFDelegate TransfChooseINF;
         public Disk()
         {
-            InitializeComponent();                 
+            InitializeComponent();
+            this.TestOrNot.Checked = true;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+
         }
        
         public bool returnTestOrNot()
