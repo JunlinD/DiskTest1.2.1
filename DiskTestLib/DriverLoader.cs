@@ -155,12 +155,13 @@ namespace DiskTestLib
             TestCircle = 0;
             TestNum = 0;
         }
-        public void SetRandomParameters(bool testornot, int testmode, long testtime, long testnum)
+        public void SetRandomParameters(bool testornot, int testmode, long testtime, long testnum,int blocksize)
         {
             TestOrNot = testornot;
             TestMode = testmode;
             TestTime = testtime;
             TestNum = testnum;
+            BlockSize = blocksize;
             if (testmode == -1||(testtime==0&&testnum==0))
                 TestOrNot = false;
         }

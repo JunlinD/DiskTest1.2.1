@@ -145,7 +145,7 @@ namespace DiskTest11
             {
                 if (testmode==0 || testmode == 1 || testmode == 2)
                 {
-                    choose.SetRandomParameters(test_or_not, testmode, testtime, testnum);
+                    choose.SetRandomParameters(test_or_not, testmode, testtime, testnum,blocksize);
                 }
                 else
                 {
