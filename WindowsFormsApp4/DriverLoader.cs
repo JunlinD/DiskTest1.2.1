@@ -175,7 +175,7 @@ namespace DiskTestLib
             TestTime = testtime;
             TestCircle = testcircle;
             TestNum = testnum;
-            if (testmode == -1 || (testtime == 0 && testnum == 0) || blocksize == 0 || testdatamode == -1)
+            if (testmode == -1 || blocksize == 0 || testdatamode == -1)
             {
                 TestOrNot = false;
             }

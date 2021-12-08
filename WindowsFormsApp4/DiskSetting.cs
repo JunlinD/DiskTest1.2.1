@@ -802,7 +802,7 @@ namespace DiskTest11
                     TestArray = new byte[actual_block_size];
                     CompareArray = new byte[actual_block_size];
                     Init_TestArray(temp_block, test_mode);
-                    long pos = NextLong(0, 100);
+                    long pos = NextLong(0, driver.DiskInformation.DiskSectorSize - temp_block);
                     Console.WriteLine("写入" + pos + "扇区");
                     driver.WritSector(TestArray, pos, temp_block);
                     speed_end = Environment.TickCount;//测试读写速度
@@ -1076,6 +1076,8 @@ namespace DiskTest11
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             Ed[e.RowIndex].Show();
+            //Ed[e.RowIndex].TransfChooseINF += Get_Transf_Choose_INF_Event;
+            //Disk_Choose_Information_List[e.RowIndex] = Temp_Choose;
             panel1.Controls.Clear();
             panel1.Controls.Add(Ed[e.RowIndex]);
             now_index_framework = e.RowIndex;
