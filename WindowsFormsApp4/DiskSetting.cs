@@ -224,7 +224,7 @@ namespace DiskTest11
                 {
                     if (chooseInformation.TestMode == 0)//随机读写验证
                     {
-                        RandomWriteAndVerify(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
+                        RandomWriteAndVerify(i, chooseInformation.TestNum, chooseInformation.TestTime,2, chooseInformation.BlockSize);
                     }
                     else if (chooseInformation.TestMode == 1)//随机只读
                     {
@@ -232,7 +232,7 @@ namespace DiskTest11
                     }
                     else if (chooseInformation.TestMode == 2)//随机只写
                     {
-                        RandomOnlyWrite(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
+                        RandomOnlyWrite(i, chooseInformation.TestNum, chooseInformation.TestTime,2, chooseInformation.BlockSize);
                     }
                     else if (chooseInformation.TestMode == 3)//顺序读写验证
                     {
@@ -292,40 +292,7 @@ namespace DiskTest11
         /// <summary>
         /// 初始化测试参数
         /// </summary>
-        private void Init_Test_Parameters()
-        {
-            for (int i = 0; i < Disk_Driver_List.Count; i++)
-            {
-                if ((bool)Disk_Information_List[0])
-                {
-                    if ((int)this.Disk_Information_List[1] == 0 || (int)this.Disk_Information_List[1] == 1 || (int)this.Disk_Information_List[1] == 2)
-                    {
-
-                        bool testornot = (bool)this.Disk_Information_List[0];
-                        int testmode = (int)this.Disk_Information_List[1];
-                        long testtime = (long)this.Disk_Information_List[5];
-                        long testnum = (long)this.Disk_Information_List[7];
-                        ChooseInformation choose = new ChooseInformation();
-                        choose.SetRandomParameters(testornot, testmode, testtime, testnum);
-                        Disk_Choose_Information.Add(choose);
-                    }
-                    else
-                    {
-                        bool testornot = (bool)this.Disk_Information_List[0];
-                        int testmode = (int)this.Disk_Information_List[1];
-                        int testdatamode = (int)this.Disk_Information_List[2];
-                        long testtime = (long)this.Disk_Information_List[5];
-                        int testcircle = (int)this.Disk_Information_List[6];
-                        long testnum = (long)this.Disk_Information_List[7];
-                        int testpercent = (int)this.Disk_Information_List[3];
-                        int blocksize = (int)this.Disk_Information_List[4];
-                        ChooseInformation choose = new ChooseInformation();
-                        choose.SetOrderParameters(testornot, testmode, testdatamode, testpercent, blocksize, testtime, testnum, testcircle);
-                        Disk_Choose_Information.Add(choose);
-                    }
-                }
-            }
-        }
+       
         /// <summary>
         /// 获取硬盘信息的函数
         /// </summary>
@@ -835,7 +802,7 @@ namespace DiskTest11
                     TestArray = new byte[actual_block_size];
                     CompareArray = new byte[actual_block_size];
                     Init_TestArray(temp_block, test_mode);
-                    long pos = NextLong(0, driver.DiskInformation.DiskSectorSize - temp_block);
+                    long pos = NextLong(0, 100);
                     Console.WriteLine("写入" + pos + "扇区");
                     driver.WritSector(TestArray, pos, temp_block);
                     speed_end = Environment.TickCount;//测试读写速度
@@ -1109,8 +1076,6 @@ namespace DiskTest11
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             Ed[e.RowIndex].Show();
-            //Ed[e.RowIndex].TransfChooseINF += Get_Transf_Choose_INF_Event;
-            //Disk_Choose_Information_List[e.RowIndex] = Temp_Choose;
             panel1.Controls.Clear();
             panel1.Controls.Add(Ed[e.RowIndex]);
             now_index_framework = e.RowIndex;

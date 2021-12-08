@@ -155,12 +155,15 @@ namespace DiskTestLib
             TestCircle = 0;
             TestNum = 0;
         }
-        public void SetRandomParameters(bool testornot, int testmode, long testtime, long testnum)
+        public void SetRandomParameters(bool testornot, int testmode, long testtime, long testnum,int blocksize)
         {
             TestOrNot = testornot;
             TestMode = testmode;
             TestTime = testtime;
             TestNum = testnum;
+            BlockSize = blocksize;
+            if (testmode == -1||(testtime==0&&testnum==0))
+                TestOrNot = false;
         }
         public void SetOrderParameters(bool testornot, int testmode, int testdatamode, int testpercent, int blocksize, long testtime, long testnum, int testcircle)
         {
@@ -172,6 +175,10 @@ namespace DiskTestLib
             TestTime = testtime;
             TestCircle = testcircle;
             TestNum = testnum;
+            if (testmode == -1 || (testtime == 0 && testnum == 0) || blocksize == 0 || testdatamode == -1)
+            {
+                TestOrNot = false;
+            }
         }
     }
     public class TestInformation
