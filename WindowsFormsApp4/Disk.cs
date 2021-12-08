@@ -111,7 +111,7 @@ namespace DiskTest11
             }
         }
         public event TransfDelegate TransfEvent;
-        private void Confirm_Click(object sender, EventArgs e)
+        /*private void Confirm_Click(object sender, EventArgs e)
         {
             ArrayList nc_format_info = new ArrayList();
             if (this.returnTestOrNot())
@@ -120,14 +120,14 @@ namespace DiskTest11
                 nc_format_info.Add(this.returnTestMode());
                 nc_format_info.Add(this.returnTestDataMode());
                 nc_format_info.Add(this.returnTestPercent());
-                nc_format_info.Add(this.returnBlockSize());
+                nc_format_info.Add(this.returnBlockSize()*2);
                 nc_format_info.Add(this.returnTestTime());
                 nc_format_info.Add(this.returnTestCircle());
                 nc_format_info.Add(this.returnTestNum());
             }
             TransfEvent(nc_format_info);
             MessageBox.Show("设置完成");
-        }
+        }*/
         private void confirm_Click(object sender,EventArgs e)
         {
             ChooseInformation choose = new ChooseInformation();
@@ -135,7 +135,7 @@ namespace DiskTest11
             int testmode=this.returnTestMode();
             int testdatamode=this.returnTestDataMode();
             int testpercent=this.returnTestPercent();
-            int blocksize=this.returnBlockSize();
+            int blocksize=this.returnBlockSize()*2;
             long testtime=this.returnTestTime();
             int testcircle=this.returnTestCircle();
             long testnum=this.returnTestNum();
@@ -164,7 +164,7 @@ namespace DiskTest11
             {
                 TestDataMode.Enabled = false;//测试数据模式
                 TestPercent.Enabled = false;//测试容量
-                BlockSize.Enabled = false;//块大小
+                BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = true;
                 TestNum.Text = "1000";
                 CircleNumble.Enabled = false;
@@ -174,7 +174,7 @@ namespace DiskTest11
             {
                 TestDataMode.Enabled = false;//测试数据模式
                 TestPercent.Enabled = false;//测试容量
-                BlockSize.Enabled = false;//块大小
+                BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = true;
                 TestNum.Text = "1000";
                 CircleNumble.Enabled = false;
@@ -184,7 +184,7 @@ namespace DiskTest11
             {
                 TestDataMode.Enabled = false;//测试数据模式
                 TestPercent.Enabled = false;//测试容量
-                BlockSize.Enabled = false;//块大小
+                BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = true;
                 TestNum.Text = "1000";
                 CircleNumble.Enabled = false;

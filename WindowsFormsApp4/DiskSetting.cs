@@ -224,15 +224,15 @@ namespace DiskTest11
                 {
                     if (chooseInformation.TestMode == 0)//随机读写验证
                     {
-                        RandomWriteAndVerify(i, chooseInformation.TestNum, chooseInformation.TestTime);
+                        RandomWriteAndVerify(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
                     }
                     else if (chooseInformation.TestMode == 1)//随机只读
                     {
-                        RandomOnlyRead(i, chooseInformation.TestNum, chooseInformation.TestTime);
+                        RandomOnlyRead(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
                     }
                     else if (chooseInformation.TestMode == 2)//随机只写
                     {
-                        RandomOnlyWrite(i, chooseInformation.TestNum, chooseInformation.TestTime);
+                        RandomOnlyWrite(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
                     }
                     else if (chooseInformation.TestMode == 3)//顺序读写验证
                     {
@@ -421,6 +421,35 @@ namespace DiskTest11
                 for (long i = 0; i < actual_size;)
                 {
                     //添加状态判断语句
+                     if (i + block_size > actual_size)//
+                    {
+                        //这时候i已经大于actual_size了，应该减去blocksize;                       
+                        Last_Block_Size = Convert.ToInt32(actual_size - i);
+                        int temp = DEAFAUT_BLOCKSIZE * Last_Block_Size;
+                        TestArray = new byte[temp];
+                        CompareArray = new byte[temp];
+                        Init_TestArray(Last_Block_Size, test_data_mode);
+                        speed_start = Environment.TickCount;
+                        driver.WritSector(TestArray, i, Last_Block_Size);//记得将块的大小传进去
+                        CompareArray = driver.ReadSector(i, Last_Block_Size);//传的是块大小
+                        error_num += VerifyArray(TestArray, CompareArray);
+                        double now_MB_Last = (double)Last_Block_Size * 512 / (double)1048576;//最后一个块的MB数
+                        speed_end = Environment.TickCount;
+                        double now_speed_Last = (double)(1000 * now_MB_Last);
+                        now_speed_Last=now_speed_Last/(speed_end - speed_start);//写速度的计算
+                        now_MB_Last += (_MB_num / 1048576);
+                        
+                        string now_time_Last = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
+                        this.PublishNotify(100, now_speed_Last, now_MB_Last, now_time_Last);
+                        Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
+                        this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
+                        if (error_num == 0)
+                        {
+                            Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                            this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                        }
+                        break;
+                    }
                     if (Test_Status == false)
                     {
                         resetEvent.WaitOne();
@@ -430,24 +459,19 @@ namespace DiskTest11
                     _MB_num += DEAFAUT_BLOCKSIZE * block_size;
                     CompareArray = driver.ReadSector(i, block_size);
                     error_num += VerifyArray(TestArray, CompareArray);
-
+                    i += block_size;
                     Console.WriteLine("向" + i + "扇区写入了数据");
                     if (_MB_num % (1048576 * 50) == 0)
                     {
                         double now_speed = ((double)(1000 * 50) / (double)(speed_end - speed_start));
                         double now_MB = _MB_num / 1048576;
                         string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
-                        speed_start = speed_end;
+                        speed_start = Environment.TickCount;
                         this.PublishNotify((int)(i * 100 / actual_size), now_speed, now_MB, now_time);
                     }
-                        i += block_size;
+       
                 }
-                this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                if (error_num == 0)
-                {
-                    Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
-                    this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
-                }
+                //this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));                
             }
             else if (test_data_mode == 2)
             {
@@ -455,7 +479,36 @@ namespace DiskTest11
                 for (long i = 0; i < actual_size; )
                 {
                     //添加状态判断语句
-                    if (Test_Status == false)
+                    if (i + block_size > actual_size)//
+                    {
+                        //这时候i已经大于actual_size了，应该减去blocksize;                       
+                        Last_Block_Size = Convert.ToInt32(actual_size - i);
+                        int temp = DEAFAUT_BLOCKSIZE * Last_Block_Size;
+                        TestArray = new byte[temp];
+                        CompareArray = new byte[temp];
+                        Init_TestArray(Last_Block_Size, test_data_mode);
+                        speed_start = Environment.TickCount;
+                        driver.WritSector(TestArray, i, Last_Block_Size);//记得将块的大小传进去
+                        CompareArray = driver.ReadSector(i, Last_Block_Size);//传的是块大小
+                        error_num += VerifyArray(TestArray, CompareArray);
+                        double now_MB_Last = (double)Last_Block_Size * 512 / (double)1048576;//最后一个块的MB数
+                        speed_end = Environment.TickCount;
+                        double now_speed_Last = (double)(1000 * now_MB_Last);
+                        now_speed_Last = now_speed_Last / (speed_end - speed_start);//写速度的计算
+                        now_MB_Last += (_MB_num / 1048576);
+
+                        string now_time_Last = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
+                        this.PublishNotify(100, now_speed_Last, now_MB_Last, now_time_Last);
+                        Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
+                        this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
+                        if (error_num == 0)
+                        {
+                            Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                            this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                        }
+                        break;
+                    }
+                        if (Test_Status == false)
                     {
                         resetEvent.WaitOne();
                     }
@@ -465,6 +518,7 @@ namespace DiskTest11
                     error_num += VerifyArray(TestArray, CompareArray);
                     speed_end = Environment.TickCount;
                     _MB_num += DEAFAUT_BLOCKSIZE * block_size;
+                    i += block_size;
                     if (_MB_num % (1048576 * 50) == 0)
                     {
                         double now_speed = ((double)(1000 * 50) / (double)(speed_end - speed_start));
@@ -473,7 +527,7 @@ namespace DiskTest11
                         speed_start = speed_end;
                         this.PublishNotify((int)(i * 100 / actual_size), now_speed, now_MB, now_time);
                     }
-                    i += block_size;
+
                 }
                 this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                 if (error_num == 0)
@@ -570,6 +624,24 @@ namespace DiskTest11
                 int error_num = 0;
                 for (long i = 0; i < actual_size;)
                 {
+                    if (i + block_size > actual_size)//614400 610630
+                    {
+                        //这时候i已经大于actual_size了，应该减去blocksize;                       
+                        Last_Block_Size = Convert.ToInt32(actual_size - i);
+                        TestArray = new byte[DEAFAUT_BLOCKSIZE * Last_Block_Size];
+                        Init_TestArray(Last_Block_Size, test_data_mode);
+                        driver.WritSector(TestArray, i, Last_Block_Size);//记得将块的大小传进去
+                        double now_MB_Last = (double)Last_Block_Size * 512 / (double)1048576;//最后一个块的MB数
+                        speed_end = Environment.TickCount;
+                        double now_speed_Last = ((double)(1000 * now_MB_Last) / (double)(speed_end - speed_start));//写速度的计算
+                        now_MB_Last += (_MB_num / 1048576);
+                        string now_time_Last = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
+                        this.PublishNotify(100, now_speed_Last, now_MB_Last, now_time_Last);
+                        Console.WriteLine("顺序只写测试完成，测试了" + actual_size + "个块未发生错误！");
+                        this.PrintLog("顺序只写测试完成，测试了" + actual_size + "个块未发生错误！");
+                        break;
+                    }
+
                     //添加状态判断语句
                     if (Test_Status == false)
                     {
@@ -579,6 +651,7 @@ namespace DiskTest11
                     driver.WritSector(TestArray, i, block_size);
                     speed_end = Environment.TickCount;
                     _MB_num += DEAFAUT_BLOCKSIZE * block_size;
+                    i += block_size;
                     if (_MB_num % (1048576 * 50) == 0)//
                     {
                         double now_speed = ((double)(1000 * 50) / (double)(speed_end - speed_start));
@@ -587,13 +660,8 @@ namespace DiskTest11
                         GetWriteSpeed?.Invoke(now_speed);
                         speed_start = speed_end;
                         this.PublishNotify((int)(i * 100 / actual_size), now_speed, now_MB, now_time);
-                        //Console.WriteLine("顺序只写测试完成，测试了" + actual_size + "次未发生错误！");
                     }
-                    i += block_size;
                 }
-                this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                Console.WriteLine("顺序只写测试完成，测试了" + actual_size + "次未发生错误！");
-                this.PrintLog("顺序只写测试完成，测试了" + actual_size + "次未发生错误！");
             }
             else
             {
@@ -630,6 +698,29 @@ namespace DiskTest11
             for (long i = 0; i < actual_size;)
             {
                 //添加状态判断语句
+                if (i + block_size > actual_size)//
+                {
+                    //这时候i已经大于actual_size了，应该减去blocksize;
+                    speed_start = Environment.TickCount;
+                    Last_Block_Size = Convert.ToInt32(actual_size - i);
+                    int temp = DEAFAUT_BLOCKSIZE * Last_Block_Size;
+                    
+                    CompareArray = new byte[temp];
+                    //Init_TestArray(Last_Block_Size, test_data_mode);
+                    
+                    CompareArray = driver.ReadSector(i, Last_Block_Size);//传的是块大小
+                    double now_MB_Last = (double)Last_Block_Size * 512 / (double)1048576;//最后一个块的MB数
+                    speed_end = Environment.TickCount;
+                    double now_speed_Last = (double)(1000 * now_MB_Last);
+                    now_speed_Last = now_speed_Last / (speed_end - speed_start);//写速度的计算
+                    now_MB_Last += (_MB_num / 1048576);
+
+                    string now_time_Last = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
+                    this.PublishNotify(100, now_speed_Last, now_MB_Last, now_time_Last);
+                    Console.WriteLine("顺序只读测试完成，测试了" + actual_size + "次未发生错误！");
+                    this.PrintLog("顺序只读测试完成，测试了" + actual_size + "次未发生错误！");
+                    break;
+                }
                 if (Test_Status == false)
                 {
                     resetEvent.WaitOne();
@@ -637,20 +728,19 @@ namespace DiskTest11
                 CompareArray = driver.ReadSector(i, block_size);
                 speed_end = Environment.TickCount;
                 _MB_num += DEAFAUT_BLOCKSIZE * block_size;
+                i += block_size;
                 if (_MB_num % (1048576 * 50) == 0)
                 {
                     double now_speed = ((double)(1000 * 50) / (double)(speed_end - speed_start));
                     double now_MB = _MB_num / 1048576;
 
                     string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
-                    speed_start = speed_end;
+                    speed_start = Environment.TickCount;
                     this.PublishNotify((int)(i * 100 / actual_size), now_speed, now_MB, now_time);
                 }
-                i += block_size;
+
             }
-            this.PublishNotify(100, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-            Console.WriteLine("顺序只读测试完成，测试了" + actual_size + "次未发生错误！");
-            this.PrintLog("顺序只读测试完成，测试了" + actual_size + "次未发生错误！");
+
 
         }
         /// <summary>
@@ -660,7 +750,7 @@ namespace DiskTest11
         /// <param name="test_num">测试次数</param>
         /// <param name="test_time">测试时间</param>
         /// <param name="test_mode">测试模式--0代表全0,1代表全1，2随机数</param>
-        public void RandomWriteAndVerify(int driver_index, long test_num = 0, long test_time = 0, int test_mode = 2)
+        public void RandomWriteAndVerify(int driver_index, long test_num = 0, long test_time = 0, int test_mode = 2,int block_size=8192)
         {
             if (Disk_Driver_List.Count <= 0)
             {
@@ -683,7 +773,8 @@ namespace DiskTest11
                     {
                         resetEvent.WaitOne();
                     }
-                    int temp_block = R.Next(1, 5);
+                    //int temp_block = R.Next(1, 5);
+                    int temp_block = block_size;
                     int actual_block_size = DEAFAUT_BLOCKSIZE * temp_block;
                     TestArray = new byte[actual_block_size];
                     CompareArray = new byte[actual_block_size];
@@ -738,7 +829,8 @@ namespace DiskTest11
                     }
                     if (temp_num >= test_num)
                         break;
-                    int temp_block = R.Next(1, 5);
+                    //int temp_block = R.Next(1, 5);
+                    int temp_block = block_size;
                     int actual_block_size = DEAFAUT_BLOCKSIZE * temp_block;
                     TestArray = new byte[actual_block_size];
                     CompareArray = new byte[actual_block_size];
@@ -780,7 +872,7 @@ namespace DiskTest11
         /// <param name="driver_index">读写IO流的编号--与硬盘对应</param>
         /// <param name="test_num">测试次数</param>
         /// <param name="test_time">测试时间</param>
-        public void RandomOnlyRead(int driver_index, long test_num = 0, long test_time = 0)
+        public void RandomOnlyRead(int driver_index, long test_num = 0, long test_time = 0,int block_size=8192)
         {
             if (Disk_Driver_List.Count <= 0)
             {
@@ -803,7 +895,8 @@ namespace DiskTest11
                     {
                         resetEvent.WaitOne();
                     }
-                    int temp_block = R.Next(1, 5);
+                    //int temp_block = R.Next(1, 5);
+                    int temp_block = block_size;
                     int actual_block_size = DEAFAUT_BLOCKSIZE * temp_block;
                     CompareArray = new byte[actual_block_size];
                     long pos = NextLong(0, driver.DiskInformation.DiskSectorSize - temp_block);
@@ -835,7 +928,8 @@ namespace DiskTest11
                 {
                     if (temp_num >= test_num)
                         break;
-                    int temp_block = R.Next(1, 5);
+                    //int temp_block = R.Next(1, 5);
+                    int temp_block = block_size;
                     int actual_block_size = DEAFAUT_BLOCKSIZE * temp_block;
                     CompareArray = new byte[actual_block_size];
                     long pos = NextLong(0, driver.DiskInformation.DiskSectorSize - temp_block);
@@ -853,7 +947,7 @@ namespace DiskTest11
         /// <param name="test_num">测试次数</param>
         /// <param name="test_time">测试时间</param>
         /// <param name="test_mode">测试模式</param>
-        public void RandomOnlyWrite(int driver_index, long test_num = 0, long test_time = 0, int test_mode = 2)
+        public void RandomOnlyWrite(int driver_index, long test_num = 0, long test_time = 0, int test_mode = 2, int block_size = 8192)
         {
             if (Disk_Driver_List.Count <= 0)
             {
@@ -876,7 +970,8 @@ namespace DiskTest11
                     {
                         resetEvent.WaitOne();
                     }
-                    int temp_block = R.Next(1, 5);
+                    //int temp_block = R.Next(1, 5);
+                    int temp_block = block_size;
                     int actual_block_size = DEAFAUT_BLOCKSIZE * temp_block;
                     TestArray = new byte[actual_block_size];
                     Init_TestArray(temp_block, test_mode);
@@ -914,7 +1009,8 @@ namespace DiskTest11
                     }
                     if (temp_num >= test_num)
                         break;
-                    int temp_block = R.Next(1, 5);
+                    //int temp_block = R.Next(1, 5);
+                    int temp_block = block_size;
                     int actual_block_size = DEAFAUT_BLOCKSIZE * temp_block;
                     TestArray = new byte[actual_block_size];
                     Init_TestArray(temp_block, test_mode);

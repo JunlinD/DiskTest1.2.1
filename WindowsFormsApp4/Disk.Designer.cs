@@ -176,11 +176,21 @@ namespace DiskTest11
             this.BlockSize.DisplayMember = "1";
             this.BlockSize.FormattingEnabled = true;
             this.BlockSize.Items.AddRange(new object[] {
-            "1",
-            "2",
-            "3",
             "4",
-            "5"});
+            "8",
+            "16",
+            "32",
+            "64",
+            "128",
+            "256",
+            "512",
+            "1024",
+            "2048",
+            "4096",
+            "8192",
+            "16384",
+            "32768",
+            "65536"});
             this.BlockSize.Location = new System.Drawing.Point(110, 181);
             this.BlockSize.Name = "BlockSize";
             this.BlockSize.Size = new System.Drawing.Size(130, 32);
