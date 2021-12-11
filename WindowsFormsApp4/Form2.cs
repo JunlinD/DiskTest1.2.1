@@ -17,6 +17,7 @@ namespace DiskTest11
         private DiskSetting diskSetting;
         private Test2 test2;
         private Log log;
+        private Logging logging;
         //public PercentHandler GetPercent;
         public Form2()
         {
@@ -24,16 +25,18 @@ namespace DiskTest11
             diskSetting = new DiskSetting();
             test2 = new Test2();
             log = new Log();
+            logging = new Logging();
             int pageIndex = 100;
             diskSetting.AddNotifyObserver(new NotifyEventHandler(test2.ReceiveEvent));
             diskSetting.AddSwitchObserver(new SwitchEventHandler(Aside.SelectPage));
             diskSetting.AddLogObserver(new LogEventHandler(log.LogEvent));
+            //diskSetting.AddLogObserver(new LogEventHandler(logging.LoggingEvent));
             test2.addStopTestOberver(new StopTestEventHandler(diskSetting.Get_Stop_Button_Status_Event));
             diskSetting.AddStartTimeObserver(new StartTimeEventHandler(test2.GetStartTimeEvent));
             TreeNode parent = Aside.CreateNode("Setting", pageIndex);
             Aside.CreateChildNode(parent, AddPage(diskSetting, ++pageIndex));
             Aside.CreateChildNode(parent, AddPage(new Errors(), ++pageIndex));
-            Aside.CreateChildNode(parent, AddPage(new Logging(), ++pageIndex));
+            Aside.CreateChildNode(parent, AddPage(logging, ++pageIndex));
             pageIndex = 200;
             parent = Aside.CreateNode("Test", pageIndex);
             Aside.CreateChildNode(parent, AddPage(test2, ++pageIndex));

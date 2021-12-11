@@ -1075,12 +1075,19 @@ namespace DiskTest11
         /// <param name="e"></param>
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            Ed[e.RowIndex].Show();
-            //Ed[e.RowIndex].TransfChooseINF += Get_Transf_Choose_INF_Event;
-            //Disk_Choose_Information_List[e.RowIndex] = Temp_Choose;
-            panel1.Controls.Clear();
-            panel1.Controls.Add(Ed[e.RowIndex]);
-            now_index_framework = e.RowIndex;
+            try
+            {
+                Ed[e.RowIndex].Show();
+                //Ed[e.RowIndex].TransfChooseINF += Get_Transf_Choose_INF_Event;
+                //Disk_Choose_Information_List[e.RowIndex] = Temp_Choose;
+                panel1.Controls.Clear();
+                panel1.Controls.Add(Ed[e.RowIndex]);
+                now_index_framework = e.RowIndex;
+            }
+            catch (Exception ee){
+                MessageBox.Show("找不到硬盘");
+             }
+
             
         }
 

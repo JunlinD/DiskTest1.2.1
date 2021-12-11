@@ -36,14 +36,14 @@ namespace DiskTest11
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.checkBox3 = new System.Windows.Forms.CheckBox();
-            this.checkBox2 = new System.Windows.Forms.CheckBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.singlefile = new System.Windows.Forms.RadioButton();
+            this.file_name2 = new System.Windows.Forms.TextBox();
+            this.stampedfile = new System.Windows.Forms.RadioButton();
             this.label2 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.browse = new System.Windows.Forms.Button();
+            this.file_name = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.Turn_or_not = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -53,7 +53,7 @@ namespace DiskTest11
             // 
             this.groupBox1.Controls.Add(this.groupBox3);
             this.groupBox1.Controls.Add(this.groupBox2);
-            this.groupBox1.Controls.Add(this.checkBox1);
+            this.groupBox1.Controls.Add(this.Turn_or_not);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(1034, 646);
@@ -120,92 +120,96 @@ namespace DiskTest11
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.checkBox3);
-            this.groupBox2.Controls.Add(this.checkBox2);
-            this.groupBox2.Controls.Add(this.textBox2);
+            this.groupBox2.Controls.Add(this.singlefile);
+            this.groupBox2.Controls.Add(this.file_name2);
+            this.groupBox2.Controls.Add(this.stampedfile);
             this.groupBox2.Controls.Add(this.label2);
-            this.groupBox2.Controls.Add(this.button1);
-            this.groupBox2.Controls.Add(this.textBox1);
+            this.groupBox2.Controls.Add(this.browse);
+            this.groupBox2.Controls.Add(this.file_name);
             this.groupBox2.Controls.Add(this.label1);
             this.groupBox2.Location = new System.Drawing.Point(40, 68);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(0);
             this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(0);
             this.groupBox2.Size = new System.Drawing.Size(957, 197);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Log file name";
             // 
-            // checkBox3
+            // singlefile
             // 
-            this.checkBox3.AutoSize = true;
-            this.checkBox3.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.checkBox3.Location = new System.Drawing.Point(336, 147);
-            this.checkBox3.Name = "checkBox3";
-            this.checkBox3.Size = new System.Drawing.Size(147, 35);
-            this.checkBox3.TabIndex = 6;
-            this.checkBox3.Text = "Single file";
-            this.checkBox3.UseVisualStyleBackColor = true;
+            this.singlefile.AutoSize = true;
+            this.singlefile.Location = new System.Drawing.Point(393, 147);
+            this.singlefile.Name = "singlefile";
+            this.singlefile.Size = new System.Drawing.Size(150, 35);
+            this.singlefile.TabIndex = 22;
+            this.singlefile.TabStop = true;
+            this.singlefile.Text = "Single file";
+            this.singlefile.UseVisualStyleBackColor = true;
             // 
-            // TestOrNot
+            // file_name2
             // 
-            this.checkBox2.AutoSize = true;
-            this.checkBox2.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.checkBox2.Location = new System.Drawing.Point(42, 147);
-            this.checkBox2.Name = "TestOrNot";
-            this.checkBox2.Size = new System.Drawing.Size(250, 35);
-            this.checkBox2.TabIndex = 5;
-            this.checkBox2.Text = "Time stamped files";
-            this.checkBox2.UseVisualStyleBackColor = true;
+            this.file_name2.Location = new System.Drawing.Point(210, 105);
+            this.file_name2.Name = "file_name2";
+            this.file_name2.Size = new System.Drawing.Size(392, 39);
+            this.file_name2.TabIndex = 4;
             // 
-            // textBox2
+            // stampedfile
             // 
-            this.textBox2.Location = new System.Drawing.Point(205, 105);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(322, 39);
-            this.textBox2.TabIndex = 4;
+            this.stampedfile.AutoSize = true;
+            this.stampedfile.Location = new System.Drawing.Point(25, 147);
+            this.stampedfile.Name = "stampedfile";
+            this.stampedfile.Size = new System.Drawing.Size(253, 35);
+            this.stampedfile.TabIndex = 21;
+            this.stampedfile.TabStop = true;
+            this.stampedfile.Text = "Time stamped files";
+            this.stampedfile.UseVisualStyleBackColor = true;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(46, 105);
+            this.label2.Location = new System.Drawing.Point(3, 102);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(127, 31);
+            this.label2.Size = new System.Drawing.Size(198, 31);
             this.label2.TabIndex = 3;
-            this.label2.Text = "Log name";
+            this.label2.Text = "Log name prefix";
             // 
-            // button1
+            // browse
             // 
-            this.button1.Location = new System.Drawing.Point(640, 49);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(111, 41);
-            this.button1.TabIndex = 2;
-            this.button1.Text = "Browse";
-            this.button1.UseVisualStyleBackColor = true;
+            this.browse.Location = new System.Drawing.Point(656, 51);
+            this.browse.Name = "browse";
+            this.browse.Size = new System.Drawing.Size(111, 41);
+            this.browse.TabIndex = 2;
+            this.browse.Text = "Browse";
+            this.browse.UseVisualStyleBackColor = true;
+            this.browse.Click += new System.EventHandler(this.browse_Click);
             // 
-            // textBox1
+            // file_name
             // 
-            this.textBox1.Location = new System.Drawing.Point(205, 51);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(392, 39);
-            this.textBox1.TabIndex = 1;
+            this.file_name.Location = new System.Drawing.Point(210, 53);
+            this.file_name.Name = "file_name";
+            this.file_name.Size = new System.Drawing.Size(392, 39);
+            this.file_name.TabIndex = 1;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(36, 51);
+            this.label1.Location = new System.Drawing.Point(33, 48);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(168, 31);
             this.label1.TabIndex = 0;
             this.label1.Text = "Log file name";
             // 
-            // checkBox1
+            // Turn_or_not
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(40, 27);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(345, 35);
-            this.checkBox1.TabIndex = 0;
-            this.checkBox1.Text = "Turn automatic logging on";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.Turn_or_not.AutoSize = true;
+            this.Turn_or_not.Location = new System.Drawing.Point(40, 27);
+            this.Turn_or_not.Name = "Turn_or_not";
+            this.Turn_or_not.Size = new System.Drawing.Size(345, 35);
+            this.Turn_or_not.TabIndex = 0;
+            this.Turn_or_not.Text = "Turn automatic logging on";
+            this.Turn_or_not.UseVisualStyleBackColor = true;
+            this.Turn_or_not.CheckedChanged += new System.EventHandler(this.Turn_or_not_CheckedChanged);
             // 
             // Logging
             // 
@@ -235,13 +239,13 @@ namespace DiskTest11
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.CheckBox checkBox3;
-        private System.Windows.Forms.CheckBox checkBox2;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox file_name2;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button browse;
+        private System.Windows.Forms.TextBox file_name;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox Turn_or_not;
+        private System.Windows.Forms.RadioButton singlefile;
+        private System.Windows.Forms.RadioButton stampedfile;
     }
 }

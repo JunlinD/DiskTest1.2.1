@@ -169,6 +169,7 @@ namespace DiskTest11
                 BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = true;
                 TestNum.Text = "1000";
+                BlockSize.SelectedIndex = 10;
                 CircleNumble.Enabled = false;
                 TestTime.Enabled = true;
             }
@@ -179,6 +180,7 @@ namespace DiskTest11
                 BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = true;
                 TestNum.Text = "1000";
+                BlockSize.SelectedIndex = 10;
                 CircleNumble.Enabled = false;
                 TestTime.Enabled = true;
             }
@@ -189,6 +191,7 @@ namespace DiskTest11
                 BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = true;
                 TestNum.Text = "1000";
+                BlockSize.SelectedIndex = 10;
                 CircleNumble.Enabled = false;
                 TestTime.Enabled = true;
             }
@@ -196,9 +199,11 @@ namespace DiskTest11
             {
                 TestDataMode.Enabled = true;//测试数据模式
                 TestPercent.Enabled = true;//测试容量
-                TestPercent.Text = "100";
+                TestPercent.Text = "1";
+                TestDataMode.SelectedIndex = 1;
                 BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = false;
+                BlockSize.SelectedIndex = 10;
                 CircleNumble.Enabled = true;//循环次数
                 TestTime.Enabled = false;
             }
@@ -207,8 +212,9 @@ namespace DiskTest11
                 TestDataMode.Enabled = false;//测试数据模式
                 //TestDataMode.SelectedIndex = 0;
                 TestPercent.Enabled = true;//测试容量
-                TestPercent.Text = "100";
+                TestPercent.Text = "1";
                 BlockSize.Enabled = true;//块大小
+                BlockSize.SelectedIndex = 10;
                 TestNum.Enabled = false;
                 CircleNumble.Enabled = true;//循环次数
                 TestTime.Enabled = false;
@@ -216,10 +222,12 @@ namespace DiskTest11
             else if (TestMode.SelectedIndex == 5)//顺序只写
             {
                 TestDataMode.Enabled = true;//测试数据模式
+                TestDataMode.SelectedIndex = 1;
                 TestPercent.Enabled = true;//测试容量
-                TestPercent.Text = "100";
+                TestPercent.Text = "1";
                 BlockSize.Enabled = true;//块大小
                 TestNum.Enabled = false;
+                BlockSize.SelectedIndex = 10;
                 CircleNumble.Enabled = true;//循环次数
                 TestTime.Enabled = false;
             }
