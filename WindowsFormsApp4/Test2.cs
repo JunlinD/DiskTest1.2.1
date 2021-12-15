@@ -20,6 +20,8 @@ namespace DiskTest11
         private bool Stop_Button_Status;
         //public PercentHandler GetPercent;
         private delegate void ReceiveEventHandler(int now, double speed, double written_MB,string now_time);
+        private delegate void ReceiveProcessAndTimeHandler(int now, string now_time);
+        private delegate void ReceiveWrittenAndSpeedHandler(double speed, double written_MB);
         private delegate void GetStartTimeEventHandler(string s);
         public StopTestEventHandler StopTestEvent;
         public Test2()
@@ -59,6 +61,66 @@ namespace DiskTest11
                 Receive(now, speed, written_MB,now_time);
             }
         }
+        /// <summary>
+        /// 接受进度条和时间的委托事件
+        /// </summary>
+        /// <param name="now"></param>
+        /// <param name="now_time"></param>
+        public void ReceiveProcessAndTimeEvent(int now,string now_time)
+        {
+            if (this.Written_MB_Show_Label.InvokeRequired)
+            {
+                ReceiveProcessAndTimeHandler re = new ReceiveProcessAndTimeHandler(ReceiveProcessAndTimeEvent);
+                this.Invoke(re, new object[] { now,  now_time });
+            }
+            else
+            {
+                ReceiveProcessAndTime(now,  now_time);
+            }
+        }
+        /// <summary>
+        /// 接受进度条和时间的事件
+        /// </summary>
+        /// <param name="now"></param>
+        /// <param name="now_time"></param>
+        private void ReceiveProcessAndTime(int now, string now_time)
+        {
+            DateTime start_t = Convert.ToDateTime(this.Start_Time_Show.Text);
+            DateTime now_t = Convert.ToDateTime(now_time);
+            TimeSpan ts = now_t - start_t;
+
+            this.uiProcessBar1.Value = now;
+            this.uiProcessBar1.Maximum = 100;
+            this.Duration_Time_Show.Text = ts.Minutes.ToString() + "m " + ts.Seconds.ToString() + "s";
+        }
+        /// <summary>
+        /// 接受已写空间和速度的委托
+        /// </summary>
+        /// <param name="speed"></param>
+        /// <param name="written_MB"></param>
+        public void ReceiveWrittenAndProcessEvent(double speed, double written_MB)
+        {
+            if (this.Now_Speed_Show_Label.InvokeRequired || this.Written_MB_Show_Label.InvokeRequired)
+            {
+                ReceiveWrittenAndSpeedHandler re = new ReceiveWrittenAndSpeedHandler(ReceiveWrittenAndProcessEvent);
+                this.Invoke(re, new object[] { speed, written_MB });
+            }
+            else
+            {
+                ReceiveWrittenAndProcess(speed, written_MB);
+            }
+        }
+        /// <summary>
+        /// 接受已写空间和速度的方法
+        /// </summary>
+        /// <param name="speed"></param>
+        /// <param name="written_MB"></param>
+        private void ReceiveWrittenAndProcess(double speed, double written_MB)
+        {
+            this.Now_Speed_Show_Label.Text = String.Format("{0:F}", speed);
+            this.Written_MB_Show_Label.Text = String.Format("{0:F}", written_MB);
+        }
+
         public void GetStartTimeEvent(string s)
         {
             if(this.Start_Time_Show.InvokeRequired)
