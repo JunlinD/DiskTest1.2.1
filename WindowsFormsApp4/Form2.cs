@@ -12,14 +12,14 @@ namespace DiskTest11
 {
     //public delegate void PercentHandler(int now);
     //测试
-    public partial class Form2 : Sunny.UI.UIAsideMainFrame
+    public partial class DiskTest : Sunny.UI.UIAsideMainFrame
     {
         private DiskSetting diskSetting;
         private Test2 test2;
         private Log log;
         private Logging logging;
         //public PercentHandler GetPercent;
-        public Form2()
+        public DiskTest()
         {
             InitializeComponent();
             diskSetting = new DiskSetting();

@@ -381,6 +381,7 @@ namespace DiskTest11
             long speed_start = start_time;//测试读写速度
             long speed_end;
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_data_mode == 0 || test_data_mode == 1)
             {
                 int error_num = 0;
@@ -408,12 +409,10 @@ namespace DiskTest11
                         
                         string now_time_Last = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                         this.PublishNotify(100, now_speed_Last, now_MB_Last, now_time_Last);
-                        Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
-                        this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
                         if (error_num == 0)
                         {
-                            Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
-                            this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个扇区未发生错误！");
+                            Console.WriteLine("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
+                            this.PrintLog("顺序读写测试完成，测试了" + actual_size + "个块未发生错误！");
                         }
                         break;
                     }
@@ -538,7 +537,7 @@ namespace DiskTest11
             long speed_start = start_time;//测试读写速度
             long speed_end;
             long _MB_num = 0;
-            
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_data_mode == 0 || test_data_mode == 1)
             {
                 Init_TestArray(block_size, test_data_mode);
@@ -662,6 +661,7 @@ namespace DiskTest11
             long speed_start = start_time;//测试读写速度
             long speed_end;
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             for (long i = 0; i < actual_size;)
             {
                 //添加状态判断语句
@@ -727,6 +727,7 @@ namespace DiskTest11
             Random R = new Random();
             DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_num == 0)
             {
                 long start_time = Environment.TickCount;
@@ -849,6 +850,7 @@ namespace DiskTest11
             Random R = new Random();
 
             DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_num == 0)
             {
                 long start_time = Environment.TickCount;
@@ -927,6 +929,7 @@ namespace DiskTest11
             long speed_start = start_time;//测试写速度
             long speed_end;
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_num == 0)
             {
 

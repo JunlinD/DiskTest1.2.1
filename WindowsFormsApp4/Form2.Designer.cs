@@ -1,7 +1,7 @@
 ﻿
 namespace DiskTest11
 {
-    partial class Form2
+    partial class DiskTest
     {
         /// <summary>
         /// Required designer variable.
@@ -34,18 +34,15 @@ namespace DiskTest11
             // Aside
             // 
             this.Aside.LineColor = System.Drawing.Color.Black;
-            this.Aside.Size = new System.Drawing.Size(250, 513);
+            this.Aside.Size = new System.Drawing.Size(250, 623);
             // 
-            // Header
-            // 
-            // 
-            // Form2
+            // DiskTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1017, 658);
-            this.Name = "Form2";
-            this.Text = "Form2";
+            this.Name = "DiskTest";
+            this.Text = "DiskTest";
             this.ResumeLayout(false);
 
         }
