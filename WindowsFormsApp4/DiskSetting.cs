@@ -444,6 +444,7 @@ namespace DiskTest11
             long speed_start = start_time;//测试读写速度
             long speed_end;
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_data_mode == 0 || test_data_mode == 1)
             {
                 int error_num = 0;
@@ -601,7 +602,7 @@ namespace DiskTest11
             long speed_start = start_time;//测试读写速度
             long speed_end;
             long _MB_num = 0;
-            
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_data_mode == 0 || test_data_mode == 1)
             {
                 Init_TestArray(block_size, test_data_mode);
@@ -725,6 +726,7 @@ namespace DiskTest11
             long speed_start = start_time;//测试读写速度
             long speed_end;
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             for (long i = 0; i < actual_size;)
             {
                 //添加状态判断语句
@@ -790,6 +792,7 @@ namespace DiskTest11
             Random R = new Random();
             DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_num == 0)
             {
                 long start_time = Environment.TickCount;
@@ -922,6 +925,7 @@ namespace DiskTest11
             Random R = new Random();
             DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
             long _MB_num = 0;
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             if (test_num == 0)
             {
                 long start_time = Environment.TickCount;
@@ -1052,7 +1056,7 @@ namespace DiskTest11
                 return;
             }
             Random R = new Random();
-
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
             DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
             if (test_num == 0)
             {
