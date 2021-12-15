@@ -13,7 +13,7 @@ namespace DiskTest11
 {
     public partial class Logging : Sunny.UI.UIPage
     {
-        //private delegate void SetLoggingEvent(string s);
+        private delegate void SetLoggingEvent(string s);
         public Logging()
         {
             InitializeComponent();
@@ -29,56 +29,56 @@ namespace DiskTest11
         {
 
         }
-        //public void LoggingEvent(string s)
-        //{
-        //    if (this.file_name2.InvokeRequired)
-        //    {
-        //        SetLoggingEvent le = new SetLoggingEvent(LoggingEvent);
-        //        this.Invoke(le, new object[] { s });
+        public void LoggingEvent(string s)
+        {
+            if (this.file_name2.InvokeRequired)
+            {
+                SetLoggingEvent le = new SetLoggingEvent(LoggingEvent);
+                this.Invoke(le, new object[] { s });
 
-        //    }
-        //    else
-        //    {
-        //        setLoggingEvent(s);
-        //    }
-        //}
-        //public void setLoggingEvent(string s)
-        //{
-            //if (file_name.Text != null)
-            //{
-            //    if (file_name2.Text != null)
-            //    {
-            //        String path = file_name.Text + "\\" + file_name2.Text + ".txt";
-            //        if (!System.IO.File.Exists(path))
-            //        {
-            //            FileStream fs1 = new FileStream(path, FileMode.Create, FileAccess.Write);//创建写入文件
-            //            System.IO.File.SetAttributes(path, FileAttributes.Hidden);
-            //            StreamWriter sw = new StreamWriter(fs1);
-            //            sw.WriteLine(s);//开始写入值
-            //            sw.Close();
-            //            fs1.Close();
-            //        }
+            }
+            else
+            {
+                setLoggingEvent(s);
+            }
+        }
+        public void setLoggingEvent(string s)
+        {
+            if (file_name.Text != null)
+            {
+                if (file_name2.Text != null)
+                {
+                    String path = file_name.Text + "\\" + file_name2.Text + ".txt";
+                    if (!System.IO.File.Exists(path))
+                    {
+                        FileStream fs1 = new FileStream(path, FileMode.Create, FileAccess.Write);//创建写入文件
+                        System.IO.File.SetAttributes(path, FileAttributes.Hidden);
+                        StreamWriter sw = new StreamWriter(fs1);
+                        sw.WriteLine(s);//开始写入值
+                        sw.Close();
+                        fs1.Close();
+                    }
 
-            //    }
-            //    else
-            //    {
-            //        String path = file_name.Text + "\\log.txt";
-            //        if (!System.IO.File.Exists(path))
-            //        {
-            //            FileStream fs1 = new FileStream(file_name.Text, FileMode.Create, FileAccess.Write);//创建写入文件
-            //            System.IO.File.SetAttributes(path, FileAttributes.Hidden);
-            //            StreamWriter sw = new StreamWriter(fs1);
-            //            sw.WriteLine(s);//开始写入值
-            //            sw.Close();
-            //            fs1.Close();
-            //        }
-            //    }
-            //}
+                }
+                else
+                {
+                    String path = file_name.Text + "\\log.txt";
+                    if (!System.IO.File.Exists(path))
+                    {
+                        FileStream fs1 = new FileStream(file_name.Text, FileMode.Create, FileAccess.Write);//创建写入文件
+                        System.IO.File.SetAttributes(path, FileAttributes.Hidden);
+                        StreamWriter sw = new StreamWriter(fs1);
+                        sw.WriteLine(s);//开始写入值
+                        sw.Close();
+                        fs1.Close();
+                    }
+                }
+            }
             //file_name2.AppendText(s + "\r\n");
 
 
 
-        //}
+            }
         private void browse_Click(object sender, EventArgs e)
         {
             using (var folderBrowserDialog = new FolderBrowserDialog())
@@ -91,7 +91,7 @@ namespace DiskTest11
                     file_name.Text = folderBrowserDialog.SelectedPath;
                 }
             }
-            //FileStream fs1 = new FileStream(System.Windows.Forms.Application.StartupPath + "\\Test.txt", FileMode.Create, FileAccess.Write);//创建写入文件
+            //FileStream fs1 = new FileStream("D:\\Test.txt", FileMode.Create, FileAccess.Write);//创建写入文件
             //System.IO.File.SetAttributes(System.Windows.Forms.Application.StartupPath + "\\Test.txt", FileAttributes.Hidden);
             //StreamWriter sw = new StreamWriter(fs1);
             //MessageBox.Show(System.Windows.Forms.Application.StartupPath + "\\Test.txt");
