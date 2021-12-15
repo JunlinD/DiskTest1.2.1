@@ -12,14 +12,14 @@ namespace DiskTest11
 {
     //public delegate void PercentHandler(int now);
     //测试
-    public partial class DiskTest : Sunny.UI.UIAsideMainFrame
+    public partial class Form2 : Sunny.UI.UIAsideMainFrame
     {
         private DiskSetting diskSetting;
         private Test2 test2;
         private Log log;
         private Logging logging;
         //public PercentHandler GetPercent;
-        public DiskTest()
+        public Form2()
         {
             InitializeComponent();
             diskSetting = new DiskSetting();
@@ -28,6 +28,8 @@ namespace DiskTest11
             logging = new Logging();
             int pageIndex = 100;
             diskSetting.AddNotifyObserver(new NotifyEventHandler(test2.ReceiveEvent));
+            diskSetting.AddProcessAndTimeObserver(new NotifyProcessAndTimeHandler(test2.ReceiveProcessAndTimeEvent));
+            diskSetting.AddWrittenAndSpeedObserver(new NotifyWrittenAndSpeedHandler(test2.ReceiveWrittenAndProcessEvent));
             diskSetting.AddSwitchObserver(new SwitchEventHandler(Aside.SelectPage));
             diskSetting.AddLogObserver(new LogEventHandler(log.LogEvent));
             diskSetting.AddLogObserver(new LogEventHandler(logging.LoggingEvent));
