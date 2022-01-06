@@ -652,10 +652,10 @@ namespace DiskTest11
                     total_speedtime += speed_time;
                     _MB_num += DEAFAUT_BLOCKSIZE * block_size;
                     i += block_size;//注意这个i+=的位置要前移，否则进度条会很别扭
-                    if (_MB_num % (1048576 * 50) == 0)//
+                    if (_MB_num % (MB * 50) == 0)//
                     {
                         double now_speed = ((double)(1000 * 50) / (double)(total_speedtime));
-                        double now_MB = _MB_num / 1048576;
+                        double now_MB = _MB_num / MB;
                         string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                         total_speedtime = 0;
                         this.PublishNotify((int)(i*100/actual_size),now_speed,now_MB,now_time);
@@ -701,10 +701,10 @@ namespace DiskTest11
                     total_speedtime += speed_time;
                     _MB_num += DEAFAUT_BLOCKSIZE * block_size;
                     i += block_size;
-                    if (_MB_num % (1048576 * 50) == 0)//
+                    if (_MB_num % (MB * 50) == 0)//
                     {
                         double now_speed = ((double)(1000 * 50) / (double)(total_speedtime));
-                        double now_MB = _MB_num / 1048576;
+                        double now_MB = _MB_num / MB;
                         string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                         GetWriteSpeed?.Invoke(now_speed);
                         total_speedtime = 0;
@@ -734,7 +734,6 @@ namespace DiskTest11
                 MessageBox.Show("未检测到设备！");
                 return;
             }
-            long start_time = Environment.TickCount;
 
             DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
             CompareArray = new byte[DEAFAUT_BLOCKSIZE * block_size];
@@ -758,7 +757,7 @@ namespace DiskTest11
                     CompareArray = driver.ReadSector(i, Last_Block_Size);//传的是块大小
                     speed_end = Environment.TickCount;
                     speed_time = speed_end - speed_start;
-                    double now_MB_Last = (double)Last_Block_Size * 512 / (double)1048576;//最后一个块的MB数
+                    double now_MB_Last = (double)Last_Block_Size * 512 / MB;//最后一个块的MB数
                     double now_speed_Last = (double)(1000 * now_MB_Last);
                     now_speed_Last = now_speed_Last / (speed_time);//写速度的计算
                     now_MB_Last += (_MB_num / MB);
@@ -781,7 +780,7 @@ namespace DiskTest11
                 i += block_size;
                 if (_MB_num % (MB * 50) == 0)
                 {
-                    double now_speed = ((double)(1000 * 50) / (double)(total_speedtime));
+                    double now_speed = (1000 * 50) /(total_speedtime);
                     total_speedtime = 0;
                     double now_MB = _MB_num / MB;
                     string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");                    
@@ -843,8 +842,8 @@ namespace DiskTest11
                     _MB_num += actual_block_size;
                     if ((end_time-start_time)%1000==0)//间隔一秒
                     {                   
-                        double now_MB = _MB_num / 1048576;
-                        double now_speed = ((double)(1000 * _MB_num) / (double)(total_speedtime) * 1048576);//累计读写字节除以时间
+                        double now_MB = _MB_num / MB;
+                        double now_speed = ((double)(1000 * _MB_num) / (double)(total_speedtime) * MB);//累计读写字节除以时间
                         string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                         GetWriteSpeed?.Invoke(now_speed);
                         total_speedtime = 0;
@@ -1059,7 +1058,6 @@ namespace DiskTest11
                         {
                             double now_speed = ((double)1000 * 100 * actual_block_size / ((double)(total_speedtime) * MB));
                             double now_MB = (double)Written_BlockSize /MB;
-                            //string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                             GetWriteSpeed?.Invoke(now_speed);
                             total_speedtime = 0;
                             this.PublishWrittenAndSpeed(now_speed, now_MB);
@@ -1104,8 +1102,8 @@ namespace DiskTest11
             long speed_end;//算读写速度的
             long speed_time;
             long total_speedtime = 0;
-            long _MB_num = 0;
-            long _MB_num_last = 0;
+            long total_MB = 0;
+            long one_MB = 0;
             long pos;
             int temp_block = block_size;
             int actual_block_size = DEAFAUT_BLOCKSIZE * temp_block;
@@ -1118,7 +1116,6 @@ namespace DiskTest11
                     {
                         resetEvent.WaitOne();
                     }
-                    //int temp_block = R.Next(1, 5);
                     CompareArray = new byte[actual_block_size];
                     pos = NextLong(0, driver.DiskInformation.DiskSectorSize - temp_block);
                     speed_start = Environment.TickCount;
@@ -1127,16 +1124,16 @@ namespace DiskTest11
                     speed_time = speed_end - speed_start;
                     total_speedtime += speed_time;
                     long end_time = Environment.TickCount;
-                    _MB_num += actual_block_size;
+                    total_MB += actual_block_size;
+                    one_MB += actual_block_size;
                     if ((end_time - start_time) % 1000 == 0)//间隔一秒
                     {
-                        double now_MB = _MB_num / 1048576;
-                        double now_speed = ((double)(1000 * _MB_num) / (double)(total_speedtime) * 1048576);//累计读写字节除以时间
+                        double now_MB = total_MB / MB;
+                        double now_speed = (1000 * (one_MB/MB) / (total_speedtime));//累计读写字节除以时间
                         string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                         GetWriteSpeed?.Invoke(now_speed);
-                        total_speedtime = 0;
+                        one_MB = 0;
                         this.PublishNotify((int)(100 * (end_time - start_time) / test_time), now_speed, now_MB, now_time);
-                        _MB_num = 0;
                      }
                     if (end_time - start_time >= test_time)
                         break;
@@ -1151,17 +1148,16 @@ namespace DiskTest11
                 while (true)
                 {
                     if (temp_num+1==test_num)//假如是最后一次测试
-                    {
-                        //这时候i已经大于actual_size了，应该减去blocksize;                                          
+                    {                                        
                         pos = NextLong(0, driver.DiskInformation.DiskSectorSize - temp_block);
                         speed_start = Environment.TickCount;
                         CompareArray = driver.ReadSector(pos, Last_Block_Size);//传的是块大小
                         speed_end = Environment.TickCount;
                         speed_time = speed_end - speed_start;
-                        _MB_num += actual_block_size;
-                        _MB_num_last += actual_block_size;
-                        double now_speed = ((double)(1000*(_MB_num_last/MB)) / (double)(speed_time));//_MB_num_last/MB是最后一部分累积的MB
-                        double now_MB = _MB_num / MB;
+                        total_MB += actual_block_size;
+                        one_MB += actual_block_size;
+                        double now_speed = ((double)(1000*(one_MB/MB)) / (double)(speed_time));//_MB_num_last/MB是最后一部分累积的MB
+                        double now_MB = total_MB / MB;
                         string now_time_Last = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                         this.PublishNotify(100, now_speed, now_MB, now_time_Last);
                         Console.WriteLine("随机只读测试完成，测试了" + test_num + "次未发生错误！");
@@ -1183,15 +1179,15 @@ namespace DiskTest11
                     speed_end = Environment.TickCount;
                     speed_time = speed_end - speed_start;
                     total_speedtime += speed_time;
-                    _MB_num += actual_block_size;
-                    _MB_num_last += actual_block_size;
-                    if (_MB_num % MB == 0)
+                    total_MB += actual_block_size;
+                    one_MB += actual_block_size;
+                    if (total_MB % (20*MB) == 0)
                     {
-                        double now_speed = ((double)(1000) / (double)(total_speedtime));
-                        double now_MB = _MB_num / MB;
+                        double now_speed = (1000*20) / (total_speedtime);
+                        double now_MB = total_MB / MB;
                         string now_time = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
                         total_speedtime = 0;
-                        _MB_num_last = 0;
+                        one_MB = 0;
                         this.PublishNotify((int)(100 * temp_num / test_num), now_speed, now_MB, now_time);
                     }
                     temp_num++;
