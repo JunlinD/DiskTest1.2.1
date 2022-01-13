@@ -1,15 +1,8 @@
 ﻿using DiskTestLib;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Management;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DiskTest11
@@ -34,27 +27,60 @@ namespace DiskTest11
     public delegate void StartTimeEventHandler(string s);//日志
     public partial class DiskSetting : Sunny.UI.UIPage
     {
+        /// <summary>
+        /// 默认块大小
+        /// </summary>
         private const int DEAFAUT_BLOCKSIZE = 512;
+        /// <summary>
+        /// 1MB的实际字节数
+        /// </summary>
         private const int MB=1048576;
+        /// <summary>
+        /// 一个静态全局变量，用于在Compute_OnceBlockTime函数中区分读，写，验证，VERTIFY是验证
+        /// </summary>
         private const int VERTIFY = 0;
+        /// <summary>
+        /// 一个静态全局变量，用于在Compute_OnceBlockTime函数中区分读，写，验证，WRITE是写
+        /// </summary>
         private const int WRITE = 1;
+        /// <summary>
+        /// 一个静态全局变量，用于在Compute_OnceBlockTime函数中区分读，写，验证，READ是读
+        /// </summary>
         private const int READ = 2;
+        /// <summary>
+        /// 一个静态全局变量，Complete_Information_Print是在测试结束后信息打印的函数，该变量代表是随机验证
+        /// </summary>
         private const int RANDOM_VERTIFY = 0;
+        /// <summary>
+        /// 一个静态全局变量，Complete_Information_Print是在测试结束后信息打印的函数，该变量代表是随机只读
+        /// </summary>
         private const int RANDOM_READ = 1;
+        /// <summary>
+        /// 一个静态全局变量，Complete_Information_Print是在测试结束后信息打印的函数，该变量代表是随机只写
+        /// </summary>
         private const int RANDOM_WRITE = 2;
+        /// <summary>
+        /// 一个静态全局变量，Complete_Information_Print是在测试结束后信息打印的函数，该变量代表是顺序验证
+        /// </summary>
         private const int ORDER_VERTIFY = 3;
+        /// <summary>
+        /// 一个静态全局变量，Complete_Information_Print是在测试结束后信息打印的函数，该变量代表是顺序只读
+        /// </summary>
         private const int ORDER_READ = 4;
+        /// <summary>
+        /// 一个静态全局变量，Complete_Information_Print是在测试结束后信息打印的函数，该变量代表是顺序只写
+        /// </summary>
         private const int ORDER_WRITE = 5;
         /// <summary>
-        /// 小间隔块数
+        /// 小间隔块数，用于计算读写速度
         /// </summary>
         private const int SMALL_INR = 1;
         /// <summary>
-        /// 中等间隔块数
+        /// 中等间隔块数用于计算读写速度
         /// </summary>
         private const int MIDDLE_INR = 10;
         /// <summary>
-        /// 大间隔块数
+        /// 大间隔块数用于计算读写速度
         /// </summary>
         private const int BIG_INR = 25;
         /// <summary>
@@ -72,33 +98,64 @@ namespace DiskTest11
         public SwitchEventHandler SwitchEvent;//切换界面
         public LogEventHandler LogEvent;//日志打印
         public StartTimeEventHandler StartTimeEvent;//传递开始时间
-
         public int now_index_framework=0;//当前点击的硬盘项
-
-        public bool Test_Status;//当前测试状态，是停止，还是继续；
+        /// <summary>
+        /// 当前测试状态，是停止，还是继续；
+        /// </summary>
+        public bool Test_Status;
         private static AutoResetEvent resetEvent = new AutoResetEvent(true);
         /// <summary>
-        /// 最后一个块的大小；
-        /// </summary>
-        private int Last_Block_Size;
-        /// <summary>
-        /// 单次累积的块数量
+        /// 一个块包含的字节数
         /// </summary>
         private long Block_Bytes;
+        /// <summary>
+        /// 全部传输累积的字节数
+        /// </summary>
         private long Total_Bytes;
-        private long Once_Bytes;       
+        /// <summary>
+        /// 单次传输累积的字节数
+        /// </summary>
+        private long Once_Bytes;
+        /// <summary>
+        /// 用于计算次数的中间变量
+        /// </summary>
         private long Temp_Nums;
+        /// <summary>
+        /// 测试的开始时间
+        /// </summary>
         private long Test_Start_Time;
+        /// <summary>
+        /// 测试的结束时间
+        /// </summary>
         private long Test_End_Time;
+        /// <summary>
+        /// 用于统计错误出现的次数的变量
+        /// </summary>
         private int Test_Error_Num;
+        /// <summary>
+        /// 测试进度，也是进度条的参数
+        /// </summary>
         private int Percent;
-        private string Now_Time;
+        /// <summary>
+        /// 当前测试到的位置，用于顺序测试
+        /// </summary>
         private long Now_Pos;
+        /// <summary>
+        /// 快间隔，用于传输测试时间和进度条的信息
+        /// </summary>
         private int Fast_INR;
+        /// <summary>
+        /// 慢间隔
+        /// </summary>
         private int Slow_INR;
+        /// <summary>
+        /// 由于是通过选择容量百分比来决定测试的空间，所以这个变量表示的就是顺序测试中你要测试到的扇区数
+        /// </summary>
         private long Order_Max_Block;
-        public Disk[] Ed; //创建用户控件，显示硬盘的控件
-
+        /// <summary>
+        /// 显示硬盘信息的对象数组
+        /// </summary>
+        public Disk[] Ed;
         public ArrayList Disk_Driver_List = new ArrayList();
         public ArrayList Disk_Choose_Information = new ArrayList();
         public ArrayList Disk_Choose_Information_List = new ArrayList();//新的choose数组
@@ -111,7 +168,6 @@ namespace DiskTest11
         /// </summary>
         private byte[] TestArray;
         private byte[] CompareArray;
-        private string NOW_TIME;
         struct SPEED_COMPUTE
         {
             public long Start_Time;
@@ -143,7 +199,6 @@ namespace DiskTest11
             Fast_INR = 0;
             Slow_INR = 0;
             Order_Max_Block = 0;
-            Now_Time = null;
             Test_Status = true;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;            
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(134)));
@@ -182,8 +237,7 @@ namespace DiskTest11
                     Disk_Choose_Information_List.Add(choose);
                 }
             }
-        }
-        
+        }        
         public void Show_Disk()
         {
             if(Ed!=null)
@@ -378,11 +432,7 @@ namespace DiskTest11
                 DriverLoader driver = new DriverLoader(information);
                 Disk_Driver_List.Add(driver);
             }
-        }
-        /// <summary>
-        /// 初始化测试参数
-        /// </summary>
-       
+        }      
         /// <summary>
         /// 获取硬盘信息的函数
         /// </summary>
@@ -499,6 +549,14 @@ namespace DiskTest11
             Speed_Compute.Once_Time = Speed_Compute.End_Time - Speed_Compute.Start_Time;
             Speed_Compute.Total_Time += Speed_Compute.Once_Time;
         }
+        /// <summary>
+        /// 根据测试模式的不同，打印测试完成的信息
+        /// </summary>
+        /// <param name="Error_num">错误次数</param>
+        /// <param name="Test_Mode">测试模式，有顺序读写验证，随机读写验证六种</param>
+        /// <param name="time">测试时间，在随机测试中会使用到</param>
+        /// <param name="num">测试次数，在随机测试中会使用到</param>
+        /// <param name="max_sector">目标扇区块数</param>
         private void Complete_Information_Print(int Error_num, int Test_Mode, long time = 0, long num = 0,long max_sector=0)
         {
             if (Error_num == 0)
@@ -577,6 +635,60 @@ namespace DiskTest11
                 this.PrintLog("测试到目标扇区：" + max_sector + "ms");
             }
 
+        }
+        /// <summary>
+        /// 计算一次处理块的速度，并传输到Form
+        /// </summary>
+        private void Compute_OnceBlockSpeed()
+        {
+            double now_MB = Total_Bytes / MB;
+            double once_mb = (double)Once_Bytes / (double)MB;
+            double now_speed = ((1000 * once_mb) / (Speed_Compute.Total_Time));//累计读写字节除以时间                        
+            GetWriteSpeed?.Invoke(now_speed);
+            if (now_speed == 0)
+            {
+                Console.WriteLine("speed is 0!");
+            }
+            if (double.IsNaN(now_speed))
+            {
+                Console.WriteLine("speed is NaN!");
+            }
+            Speed_Compute.Total_Time = 0;
+            this.PublishWrittenAndSpeed(now_speed, now_MB);
+            Once_Bytes = 0;
+        }
+        /// <summary>
+        /// 初始化测试参数，包括Test_Error_Num ，Test_Start_Time ，Temp_Nums，Total_Bytes，Once_Bytes，Percent，Block_Bytes
+        /// </summary>
+        /// <param name="block_size"></param>
+        private void Init_Test_Param(int block_size)
+        {
+            Test_Error_Num = 0;
+            Test_Start_Time = Environment.TickCount;
+            Temp_Nums = 1;
+            Total_Bytes = 0;
+            Once_Bytes = 0;
+            Percent = 0;
+            Block_Bytes = DEAFAUT_BLOCKSIZE * block_size;
+        }
+        /// <summary>
+        /// 检测是否有设备，如果没有则弹出提示框无设备
+        /// </summary>
+        private void Test_Driver_List()
+        {
+            if (Disk_Driver_List.Count <= 0)
+            {
+                MessageBox.Show("未检测到设备！");
+                return;
+            }
+        }
+        /// <summary>
+        /// 单次传输字节数和总字节数的累加
+        /// </summary>
+        private void Add_Bytes()
+        {
+            Total_Bytes += Block_Bytes;
+            Once_Bytes += Block_Bytes;
         }
         /// <summary>
         /// 顺序读写验证,已修改测速模式，已验证速度无误
@@ -718,50 +830,6 @@ namespace DiskTest11
         /// <param name="test_num">测试次数</param>
         /// <param name="test_time">测试时间</param>
         /// <param name="test_mode">测试模式--0代表全0,1代表全1，2随机数</param>
-        private void Compute_OnceBlockSpeed()
-        {
-            double now_MB = Total_Bytes / MB;
-            double once_mb = (double)Once_Bytes / (double)MB;
-            double now_speed = ((1000 * once_mb) / (Speed_Compute.Total_Time));//累计读写字节除以时间                        
-            GetWriteSpeed?.Invoke(now_speed);
-            if(now_speed==0)
-            {
-                Console.WriteLine("speed is 0!");
-            }
-            if(double.IsNaN(now_speed))
-            {
-                Console.WriteLine("speed is NaN!");
-            }
-            Speed_Compute.Total_Time = 0;
-            this.PublishWrittenAndSpeed(now_speed, now_MB);
-            Once_Bytes = 0;
-        }
-        private void Init_Test_Param(int block_size)
-        {
-            Test_Error_Num = 0;
-            Test_Start_Time = Environment.TickCount;
-            Temp_Nums = 1;
-            Total_Bytes = 0;
-            Once_Bytes = 0;
-            Percent = 0;
-            Block_Bytes = DEAFAUT_BLOCKSIZE * block_size;
-        }
-        /// <summary>
-        /// 检测是否有设备，如果没有则弹出提示框无设备
-        /// </summary>
-        private void Test_Driver_List()
-        {
-            if (Disk_Driver_List.Count <= 0)
-            {
-                MessageBox.Show("未检测到设备！");
-                return;
-            }
-        }
-        private void Add_Bytes()
-        {
-            Total_Bytes += Block_Bytes;
-            Once_Bytes += Block_Bytes;
-        }
         public void RandomWriteAndVerify(int driver_index, long test_num = 0, long test_time = 0, int test_mode = 2,int block_size=8192)
         {
             Test_Driver_List();
@@ -873,6 +941,11 @@ namespace DiskTest11
             if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, test_time, 0);
             else Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, 0, test_num);
         }
+        /// <summary>
+        /// 初始化测试数组
+        /// </summary>
+        /// <param name="block_size">测试块大小</param>
+        /// <param name="mode">测试模式</param>
         public void Init_TestArray(int block_size, int mode)
         {
             if (block_size == 0)
@@ -906,6 +979,12 @@ namespace DiskTest11
             }
 
         }
+        /// <summary>
+        /// 验证数组中的数据
+        /// </summary>
+        /// <param name="testarray"></param>
+        /// <param name="comparearray"></param>
+        /// <returns></returns>
         public int VerifyArray(byte[] testarray, byte[] comparearray)
         {
             if (testarray.Length != comparearray.Length)
@@ -925,6 +1004,12 @@ namespace DiskTest11
             return error_num;
 
         }
+        /// <summary>
+        /// 获取long型随机数
+        /// </summary>
+        /// <param name="A"></param>
+        /// <param name="B"></param>
+        /// <returns></returns>
         public long NextLong(long A, long B)
         {
             Random R = new Random((int)DateTime.Now.Ticks);
