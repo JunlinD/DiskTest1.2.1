@@ -25,7 +25,7 @@ namespace DiskTest11
     /// <param name="written_MB"></param>
     public delegate void NotifyWrittenAndSpeedHandler(double speed, double written_MB);
     public delegate void SwitchEventHandler(int i);//切换页面
-    public delegate void LogEventHandler(string s);//日志
+    public delegate void LogEventHandler(int grade,string s);//日志
     public delegate void StartTimeEventHandler(string s);//日志
     public delegate void TestTimeEventHandler();
     public delegate void CircleNumHandler(int circlenum);
@@ -39,6 +39,7 @@ namespace DiskTest11
         public static Mutex TimeMutex = new Mutex();
         public static Mutex speed_mutex = new Mutex();
         public static Mutex ErrorNumMutex = new Mutex();
+        private double MinSpeed;
         /// <summary>
         /// 计算百分比的信号量
         /// </summary>
@@ -136,6 +137,9 @@ namespace DiskTest11
         /// 用于测试的暂停和开始的变量
         /// </summary>
         private static AutoResetEvent resetEvent = new AutoResetEvent(true);
+        private static int NORMAL = 1;
+        private static int EXCEPTION = 2;
+        private static int ERROR = 3;
         private AutoResetEvent[] resetEvents;
         /// <summary>
         /// 一个块包含的字节数
@@ -343,6 +347,7 @@ namespace DiskTest11
             resetEvents[0] = new AutoResetEvent(true);
             Test_Status = true;
             RecordStream = null;
+            MinSpeed = 0.5;
         }
         public void Init_Disk_Framework()
         {
@@ -469,11 +474,11 @@ namespace DiskTest11
         /// 打印测试信息
         /// </summary>
         /// <param name="s">需要打印的信息的字符串</param>
-        public void PrintLog(string s)
+        public void PrintLog(int grade,string s)
         {
             if (LogEvent != null)
             {
-                LogEvent(s);
+                LogEvent(grade,s);
             }
         }
         /// <summary>
@@ -939,28 +944,28 @@ namespace DiskTest11
                 switch (Test_Mode)
                 {
                     case RANDOM_VERTIFY:
-                        Console.WriteLine("随机读写验证测试完成，未发生错误！");
-                        this.PrintLog("随机读写验证测试完成，未发生错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "随机读写验证测试完成，未发生错误！");
+                        this.PrintLog(NORMAL,DateTime.Now.ToString()+"随机读写验证测试完成，未发生错误！");
                         break;
                     case RANDOM_READ:
-                        Console.WriteLine("随机读验证测试完成，未发生错误！");
-                        this.PrintLog("随机读验证测试完成，未发生错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "随机读验证测试完成，未发生错误！");
+                        this.PrintLog(NORMAL, DateTime.Now.ToString() + "随机读验证测试完成，未发生错误！");
                         break;
                     case RANDOM_WRITE:
-                        Console.WriteLine("随机写验证测试完成，未发生错误！");
-                        this.PrintLog("随机写验证测试完成，未发生错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "随机写验证测试完成，未发生错误！");
+                        this.PrintLog(NORMAL, DateTime.Now.ToString() + "随机写验证测试完成，未发生错误！");
                         break;
                     case ORDER_VERTIFY:
-                        Console.WriteLine("顺序读写验证测试完成，未发生错误！");
-                        this.PrintLog("顺序读写验证测试完成，未发生错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "顺序读写验证测试完成，未发生错误！");
+                        this.PrintLog(NORMAL, DateTime.Now.ToString() + "顺序读写验证测试完成，未发生错误！");
                         break;
                     case ORDER_READ:
-                        Console.WriteLine("顺序读验证测试完成，未发生错误！");
-                        this.PrintLog("顺序读验证测试完成，未发生错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "顺序读验证测试完成，未发生错误！");
+                        this.PrintLog(NORMAL, DateTime.Now.ToString() + "顺序读验证测试完成，未发生错误！");
                         break;
                     case ORDER_WRITE:
-                        Console.WriteLine("顺序写验证测试完成，未发生错误！");
-                        this.PrintLog("顺序写验证测试完成，未发生错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "顺序写验证测试完成，未发生错误！");
+                        this.PrintLog(NORMAL, DateTime.Now.ToString() + "顺序写验证测试完成，未发生错误！");
                         break;
                 }
             }
@@ -969,45 +974,45 @@ namespace DiskTest11
                 switch (Test_Mode)
                 {
                     case RANDOM_VERTIFY:
-                        Console.WriteLine("随机读写验证测试完成，出现了" + Error_num + "个错误！");
-                        this.PrintLog("随机读写验证测试完成，出现了" + Error_num + "个错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "随机读写验证测试完成，出现了" + Error_num + "个错误！");
+                        this.PrintLog(ERROR, DateTime.Now.ToString() + "随机读写验证测试完成，出现了" + Error_num + "个错误！");
                         break;
                     case RANDOM_READ:
-                        Console.WriteLine("随机读测试完成，出现了" + Error_num + "个错误！");
-                        this.PrintLog("随机读测试完成，出现了" + Error_num + "个错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "随机读测试完成，出现了" + Error_num + "个错误！");
+                        this.PrintLog(ERROR, DateTime.Now.ToString() + "随机读测试完成，出现了" + Error_num + "个错误！");
                         break;
                     case RANDOM_WRITE:
-                        Console.WriteLine("随机读写验证测试完成，出现了" + Error_num + "个错误！");
-                        this.PrintLog("随机读写验证测试完成，出现了" + Error_num + "个错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "随机读写验证测试完成，出现了" + Error_num + "个错误！");
+                        this.PrintLog(ERROR, DateTime.Now.ToString() + "随机读写验证测试完成，出现了" + Error_num + "个错误！");
                         break;
                     case ORDER_VERTIFY:
-                        Console.WriteLine("顺序读写验证测试完成，出现了" + Error_num + "个错误！");
-                        this.PrintLog("随机读写验证测试完成，出现了" + Error_num + "个错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "顺序读写验证测试完成，出现了" + Error_num + "个错误！");
+                        this.PrintLog(ERROR, DateTime.Now.ToString() + "随机读写验证测试完成，出现了" + Error_num + "个错误！");
                         break;
                     case ORDER_READ:
-                        Console.WriteLine("顺序读测试完成，出现了" + Error_num + "个错误！");
-                        this.PrintLog("顺序读测试完成，出现了" + Error_num + "个错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "顺序读测试完成，出现了" + Error_num + "个错误！");
+                        this.PrintLog(ERROR, DateTime.Now.ToString() + "顺序读测试完成，出现了" + Error_num + "个错误！");
                         break;
                     case ORDER_WRITE:
-                        Console.WriteLine("顺序写测试完成，出现了" + Error_num + "个错误！");
-                        this.PrintLog("顺序写验证测试完成，出现了" + Error_num + "个错误！");
+                        Console.WriteLine(DateTime.Now.ToString() + "顺序写测试完成，出现了" + Error_num + "个错误！");
+                        this.PrintLog(ERROR, DateTime.Now.ToString() + "顺序写验证测试完成，出现了" + Error_num + "个错误！");
                         break;
                 }
             }
             if (num != 0 && time == 0 && max_sector == 0)
             {
                 Console.WriteLine("测试次数：" + num + "次");
-                this.PrintLog("测试次数：" + num + "次");
+                this.PrintLog(NORMAL,"测试次数：" + num + "次");
             }
             else if (num == 0 && time != 0 && max_sector == 0)
             {
                 Console.WriteLine("测试时间：" + time + "ms");
-                this.PrintLog("测试时间：" + time + "ms");
+                this.PrintLog(NORMAL, "测试时间：" + time + "ms");
             }
             else
             {
                 Console.WriteLine("测试到目标扇区：" + max_sector + "块");
-                this.PrintLog("测试到目标扇区：" + max_sector + "块");
+                this.PrintLog(NORMAL, "测试到目标扇区：" + max_sector + "块");
             }
             this.PublishAvgSpeed(Compute_Avg_Speed());
             Console.WriteLine("平均速度是：" + Compute_Avg_Speed() + "MB/s");
@@ -1209,7 +1214,7 @@ namespace DiskTest11
                 {
                     Console.WriteLine("testarray.length = " + testarray.Length + " comparearray.length = " + comparearray.Length);
                     Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss") + "当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
-                    this.PrintLog(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss") + "当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
+                    this.PrintLog(ERROR,DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss") + "当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
                     error_num++;
                 }
             }
@@ -1375,6 +1380,8 @@ namespace DiskTest11
                         Console.Write("Threadid is : " + info.threadIndex+" ");
                         double speed = Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
                         this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        if (speed <= MinSpeed)
+                            this.PrintLog(EXCEPTION, "Speed below minimum,speed is " + speed);
                         once_bytes = 0;
                         speed_compute.Total_Time = 0;
                     }
@@ -1571,6 +1578,8 @@ namespace DiskTest11
                         Console.Write("Threadid is : " + info.threadIndex + " now_pos:"+now_pos);
                         double speed=Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
                         this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        if (speed <= MinSpeed)
+                            this.PrintLog(EXCEPTION, "Speed below minimum,speed is " + speed);
                         once_bytes = 0;
                         speed_compute.Total_Time = 0;
                     }
@@ -1776,6 +1785,8 @@ namespace DiskTest11
                         Console.Write("Threadid is : " + info.threadIndex + " now_pos: "+now_pos);
                         double speed = Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
                         this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        if (speed <= MinSpeed)
+                            this.PrintLog(EXCEPTION, "Speed below minimum,speed is " + speed);
                         once_bytes = 0;
                         speed_compute.Total_Time = 0;
                     }

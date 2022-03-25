@@ -13,7 +13,7 @@ namespace DiskTest11
 {
     public partial class Logging : Sunny.UI.UIPage
     {
-        private delegate void SetLoggingEvent(string s);
+        private delegate void SetLoggingEvent(int grade,string s);
         public Logging()
         {
             InitializeComponent();
@@ -29,21 +29,31 @@ namespace DiskTest11
         {
 
         }
-        public void LoggingEvent(string s)
+        public void LoggingEvent(int grade,string s)
         {
             if (this.file_name2.InvokeRequired)
             {
                 SetLoggingEvent le = new SetLoggingEvent(LoggingEvent);
-                this.Invoke(le, new object[] { s });
+                this.Invoke(le, new object[] { grade,s });
 
             }
             else
             {
-                setLoggingEvent(s);
+                setLoggingEvent(grade,s);
             }
         }
-        public void setLoggingEvent(string s)
+        public void setLoggingEvent(int grade,string s)
         {
+            string grade_s;
+            if (grade == 1)
+                grade_s = "NORMAL: ";
+            else if (grade == 2)
+                grade_s = "EXCEPTION: ";
+            else if (grade == 3)
+                grade_s = "ERROR: ";
+            else
+                grade_s = "";
+                
             if (file_name.Text != "")
             {
                 if (file_name2.Text != "")
@@ -55,7 +65,7 @@ namespace DiskTest11
                         System.IO.File.SetAttributes(path, FileAttributes.Normal);
                         fs1.Close();
                         StreamWriter sw = new StreamWriter(path,true, System.Text.Encoding.GetEncoding("GB2312"));
-                        sw.WriteLine(s);//开始写入值
+                        sw.WriteLine(grade_s+s);//开始写入值
                         sw.WriteLine("测试时间：" + DateTime.Now.ToString());
                         sw.Close();
 
@@ -66,7 +76,7 @@ namespace DiskTest11
                         System.IO.File.SetAttributes(path, FileAttributes.Normal);
                         fs1.Close();
                         StreamWriter sw = new StreamWriter(path, true, System.Text.Encoding.GetEncoding("GB2312"));
-                        sw.WriteLine(s);//开始写入值
+                        sw.WriteLine(grade_s + s);//开始写入值
                         sw.WriteLine("测试时间：" + DateTime.Now.ToString());
                         sw.Close();
 
@@ -82,7 +92,7 @@ namespace DiskTest11
                         System.IO.File.SetAttributes(path, FileAttributes.Normal);
                         fs1.Close();
                         StreamWriter sw = new StreamWriter(path, true, System.Text.Encoding.GetEncoding("GB2312"));
-                        sw.WriteLine(s);//开始写入值
+                        sw.WriteLine(grade_s + s);//开始写入值
                         sw.Close();
 
                     }
@@ -92,7 +102,7 @@ namespace DiskTest11
                         System.IO.File.SetAttributes(path, FileAttributes.Normal);
                         fs1.Close();
                         StreamWriter sw = new StreamWriter(path, true, System.Text.Encoding.GetEncoding("GB2312"));
-                        sw.WriteLine(s);//开始写入值
+                        sw.WriteLine(grade_s + s);//开始写入值
                         sw.WriteLine("测试时间："+DateTime.Now.ToString()); 
                         sw.Close();
 

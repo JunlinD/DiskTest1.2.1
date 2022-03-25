@@ -39,6 +39,10 @@ namespace DiskTest11
             this.uiLabel12 = new Sunny.UI.UILabel();
             this.StopButton = new Sunny.UI.UIButton();
             this.uiFlowLayoutPanel1 = new Sunny.UI.UIFlowLayoutPanel();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.uiProcessBar1 = new Sunny.UI.UIProcessBar();
+            this.label1 = new System.Windows.Forms.Label();
+            this.Circle_Num_Label = new System.Windows.Forms.Label();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.userCurve1 = new HslCommunication.Controls.UserCurve();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
@@ -48,16 +52,12 @@ namespace DiskTest11
             this.AVG_Speed_Show_Label = new Sunny.UI.UILabel();
             this.uiLabel5 = new Sunny.UI.UILabel();
             this.Written_MB_Show_Label = new Sunny.UI.UILabel();
-            this.uiProcessBar1 = new Sunny.UI.UIProcessBar();
-            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.Circle_Num_Label = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.uiFlowLayoutPanel1.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
-            this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -193,6 +193,57 @@ namespace DiskTest11
             this.uiFlowLayoutPanel1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
             this.uiFlowLayoutPanel1.Click += new System.EventHandler(this.uiFlowLayoutPanel1_Click);
             // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.tableLayoutPanel2.ColumnCount = 3;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 11.57247F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 7.68935F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80.73818F));
+            this.tableLayoutPanel2.Controls.Add(this.uiProcessBar1, 2, 0);
+            this.tableLayoutPanel2.Controls.Add(this.label1, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.Circle_Num_Label, 1, 0);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(23, 466);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.tableLayoutPanel2.RowCount = 1;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(734, 36);
+            this.tableLayoutPanel2.TabIndex = 24;
+            // 
+            // uiProcessBar1
+            // 
+            this.uiProcessBar1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.uiProcessBar1.Location = new System.Drawing.Point(143, 3);
+            this.uiProcessBar1.MinimumSize = new System.Drawing.Size(70, 5);
+            this.uiProcessBar1.Name = "uiProcessBar1";
+            this.uiProcessBar1.Size = new System.Drawing.Size(588, 30);
+            this.uiProcessBar1.TabIndex = 3;
+            this.uiProcessBar1.Text = "uiProcessBar1";
+            this.uiProcessBar1.ValueChanged += new Sunny.UI.UIProcessBar.OnValueChanged(this.uiProcessBar1_ValueChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("微软雅黑", 10.5F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label1.Location = new System.Drawing.Point(3, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(76, 28);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "Circle:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label1.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // Circle_Num_Label
+            // 
+            this.Circle_Num_Label.AutoSize = true;
+            this.Circle_Num_Label.Location = new System.Drawing.Point(87, 0);
+            this.Circle_Num_Label.Name = "Circle_Num_Label";
+            this.Circle_Num_Label.Size = new System.Drawing.Size(44, 36);
+            this.Circle_Num_Label.TabIndex = 5;
+            this.Circle_Num_Label.Text = "----";
+            this.Circle_Num_Label.Click += new System.EventHandler(this.label2_Click);
+            // 
             // tableLayoutPanel4
             // 
             this.tableLayoutPanel4.ColumnCount = 1;
@@ -217,8 +268,10 @@ namespace DiskTest11
             this.userCurve1.Size = new System.Drawing.Size(688, 258);
             this.userCurve1.StrechDataCountMax = 100;
             this.userCurve1.TabIndex = 19;
-            this.userCurve1.ValueMaxLeft = 30F;
-            this.userCurve1.ValueMaxRight = 30F;
+            this.userCurve1.ValueMaxLeft = 5F;
+            this.userCurve1.ValueMaxRight = 5F;
+            this.userCurve1.ValueMinLeft = 1F;
+            this.userCurve1.ValueMinRight = 1F;
             // 
             // tableLayoutPanel3
             // 
@@ -317,57 +370,6 @@ namespace DiskTest11
             this.Written_MB_Show_Label.Text = "0.000";
             this.Written_MB_Show_Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // uiProcessBar1
-            // 
-            this.uiProcessBar1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiProcessBar1.Location = new System.Drawing.Point(143, 3);
-            this.uiProcessBar1.MinimumSize = new System.Drawing.Size(70, 5);
-            this.uiProcessBar1.Name = "uiProcessBar1";
-            this.uiProcessBar1.Size = new System.Drawing.Size(588, 30);
-            this.uiProcessBar1.TabIndex = 3;
-            this.uiProcessBar1.Text = "uiProcessBar1";
-            this.uiProcessBar1.ValueChanged += new Sunny.UI.UIProcessBar.OnValueChanged(this.uiProcessBar1_ValueChanged);
-            // 
-            // tableLayoutPanel2
-            // 
-            this.tableLayoutPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.tableLayoutPanel2.ColumnCount = 3;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 11.57247F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 7.68935F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80.73818F));
-            this.tableLayoutPanel2.Controls.Add(this.uiProcessBar1, 2, 0);
-            this.tableLayoutPanel2.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.Circle_Num_Label, 1, 0);
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(23, 466);
-            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.tableLayoutPanel2.RowCount = 1;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(734, 36);
-            this.tableLayoutPanel2.TabIndex = 24;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("微软雅黑", 10.5F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label1.Location = new System.Drawing.Point(3, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(76, 28);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Circle:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label1.Click += new System.EventHandler(this.label1_Click);
-            // 
-            // Circle_Num_Label
-            // 
-            this.Circle_Num_Label.AutoSize = true;
-            this.Circle_Num_Label.Location = new System.Drawing.Point(87, 0);
-            this.Circle_Num_Label.Name = "Circle_Num_Label";
-            this.Circle_Num_Label.Size = new System.Drawing.Size(44, 36);
-            this.Circle_Num_Label.TabIndex = 5;
-            this.Circle_Num_Label.Text = "----";
-            this.Circle_Num_Label.Click += new System.EventHandler(this.label2_Click);
-            // 
             // Test2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
@@ -380,10 +382,10 @@ namespace DiskTest11
             this.tableLayoutPanel1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.uiFlowLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel4.ResumeLayout(false);
-            this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
+            this.tableLayoutPanel4.ResumeLayout(false);
+            this.tableLayoutPanel3.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 

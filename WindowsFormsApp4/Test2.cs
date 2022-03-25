@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -31,12 +32,23 @@ namespace DiskTest11
         private TimeSpan Gap_Time;
         private DateTime Start_Time;
         private DateTime End_Time;
+        private double Max_Speed;
+        private double Min_Speed;
+        private bool Max_Set;
+        private float[] data;
+        private ArrayList floatarray;
         public StopTestEventHandler StopTestEvent;
         public Random random;
         public Test2()
         {
             Stop_Button_Status = false;
+            Max_Set = false;
+            data = new float[] { };
+            Max_Speed = 5;
+            Min_Speed = 1;
+            floatarray = new ArrayList();
             InitializeComponent();
+
         }
         public void addStopTestOberver(StopTestEventHandler stopTestEvent)
         {
@@ -159,10 +171,17 @@ namespace DiskTest11
         /// <param name="written_MB"></param>
         private void ReceiveWrittenAndProcess(double speed, double written_MB)
         {
+
             this.Now_Speed_Show_Label.Text = String.Format("{0:F}", speed)+" MB/s";
             this.Written_MB_Show_Label.Text = String.Format("{0:F}", written_MB) + " MB";
+            if (speed > Max_Speed)
+                Max_Speed = speed;
+            else if (speed < Min_Speed)
+                Min_Speed = speed;
             //Console.WriteLine("speed: " + speed + "----------------------------------");
-            this.userCurve1.AddCurveData("SPEED", (float)speed);
+            this.userCurve1.AddCurveData("SPEED", (float)speed);           
+            userCurve1.ValueMaxLeft = (float)Math.Ceiling(Max_Speed);// 向上取整
+            userCurve1.ValueMinLeft = (float)Math.Floor(Min_Speed);// 向下取整
         }
         public void ReceiveAvgSpeedEvent(double speed)
         {
@@ -197,8 +216,10 @@ namespace DiskTest11
             this.Start_Time_Show.Text = s;
             Start_Time= Convert.ToDateTime(s);
             Gap_Time =DateTime.Now-DateTime.Now;
+            
             userCurve1.RemoveCurve("SPEED");
-            this.userCurve1.SetLeftCurve("SPEED", new float[] {}, Color.Tomato);
+            data=new float[] { };
+            this.userCurve1.SetLeftCurve("SPEED", data, Color.Tomato);
         }
         public void Receive(int now,double speed,double written_MB,string now_time)
         {

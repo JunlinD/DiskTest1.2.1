@@ -30,7 +30,7 @@ namespace DiskTest11
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.ActivityLogTextBox = new System.Windows.Forms.TextBox();
+            this.ActivityLogTextBox = new System.Windows.Forms.RichTextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -53,13 +53,13 @@ namespace DiskTest11
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ActivityLogTextBox.Location = new System.Drawing.Point(5, 33);
             this.ActivityLogTextBox.Margin = new System.Windows.Forms.Padding(2);
-            this.ActivityLogTextBox.Multiline = true;
             this.ActivityLogTextBox.Name = "ActivityLogTextBox";
             this.ActivityLogTextBox.ReadOnly = true;
-            this.ActivityLogTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.ActivityLogTextBox.Size = new System.Drawing.Size(911, 498);
             this.ActivityLogTextBox.TabIndex = 12;
+            this.ActivityLogTextBox.Text = "";
             this.ActivityLogTextBox.WordWrap = false;
+            this.ActivityLogTextBox.TextChanged += new System.EventHandler(this.ActivityLogTextBox_TextChanged);
             // 
             // Log
             // 
@@ -70,7 +70,6 @@ namespace DiskTest11
             this.Name = "Log";
             this.Text = "Log";
             this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -78,6 +77,6 @@ namespace DiskTest11
         #endregion
 
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.TextBox ActivityLogTextBox;
+        private System.Windows.Forms.RichTextBox ActivityLogTextBox;
     }
 }
