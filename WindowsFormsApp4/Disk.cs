@@ -15,17 +15,19 @@ namespace DiskTest11
 {
     public delegate void TransfDelegate(ArrayList value);
     public delegate void TransfChooseINFDelegate(ChooseInformation choose);
+    public delegate void TransfRepeatTestDelegate(bool status);
     public partial class Disk : Sunny.UI.UIPage
     {
         public event TransfChooseINFDelegate TransfChooseINF;
+        public event TransfRepeatTestDelegate TransfRepeatTest;
         public Disk()
         {
             InitializeComponent();
-            this.TestOrNot.Checked = true;
+            this.TestOrNot.Checked = false;
+            EnableAll(false);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 
-        }
-       
+        }      
         public bool returnTestOrNot()
         {
             return this.TestOrNot.Checked;
@@ -84,9 +86,26 @@ namespace DiskTest11
                 return 0;
             return testnum;
         }
+        public int returnThreadNum()
+        {
+            int threadnum;
+            bool isallnum = int.TryParse(ThreadNumble.Text, out threadnum);
+            if (ThreadNumble.Text == null || !isallnum)
+                return 0;
+            return threadnum;
+        }
+        public bool returnRecordOrNot()
+        {
+            return this.Record_CheckBox.Checked;
+        }
+        public bool returnRepeatTestOrNot()
+        {
+            return this.Repeat_Test_Checkbox.Checked;
+        }
         private void TestNum_TextChanged(object sender, EventArgs e)
         {
         }
+        
         private void EnableAll(bool enable = true)
         {
             TestMode.Enabled = enable;
@@ -96,6 +115,21 @@ namespace DiskTest11
             TestNum.Enabled = enable;
             TestTime.Enabled = enable;
             CircleNumble.Enabled = enable;
+            Repeat_Test_Checkbox.Enabled = enable;
+            Record_CheckBox.Enabled = enable;
+            ThreadNumble.Enabled = enable;
+        }
+        private void Enable_Repeat(bool enable = true)
+        {
+            TestMode.Enabled = enable;
+            TestDataMode.Enabled = enable;
+            TestPercent.Enabled = enable;
+            BlockSize.Enabled = enable;
+            TestNum.Enabled = enable;
+            TestTime.Enabled = enable;
+            CircleNumble.Enabled = enable;
+            Record_CheckBox.Enabled = enable;
+            ThreadNumble.Enabled = enable;
         }
         private void DisableAll()
         {
@@ -112,24 +146,18 @@ namespace DiskTest11
                 EnableAll(true);
             }
         }
-        public event TransfDelegate TransfEvent;
-        /*private void Confirm_Click(object sender, EventArgs e)
+        private void Repeat_Test_CheckBoxChanged(object sender, EventArgs e)
         {
-            ArrayList nc_format_info = new ArrayList();
-            if (this.returnTestOrNot())
+            if(Repeat_Test_Checkbox.Checked==true)
             {
-                nc_format_info.Add(this.returnTestOrNot());
-                nc_format_info.Add(this.returnTestMode());
-                nc_format_info.Add(this.returnTestDataMode());
-                nc_format_info.Add(this.returnTestPercent());
-                nc_format_info.Add(this.returnBlockSize()*2);
-                nc_format_info.Add(this.returnTestTime());
-                nc_format_info.Add(this.returnTestCircle());
-                nc_format_info.Add(this.returnTestNum());
+                Enable_Repeat(false);
             }
-            TransfEvent(nc_format_info);
-            MessageBox.Show("设置完成");
-        }*/
+            else if(Repeat_Test_Checkbox.Checked == false)
+            {
+                Enable_Repeat(true);
+            }
+        }
+        public event TransfDelegate TransfEvent;
         private void confirm_Click(object sender,EventArgs e)
         {
             ChooseInformation choose = new ChooseInformation();
@@ -141,18 +169,27 @@ namespace DiskTest11
             long testtime=this.returnTestTime();
             int testcircle=this.returnTestCircle();
             long testnum=this.returnTestNum();
-            if (test_or_not)
+            bool record_test = this.returnRecordOrNot();
+            bool repeat_test = this.returnRepeatTestOrNot();
+            int threadnum = this.returnThreadNum();
+            if (test_or_not&&!repeat_test)
             {
                 if (testmode==0 || testmode == 1 || testmode == 2)
                 {
-                    choose.SetRandomParameters(test_or_not, testmode, testtime, testnum,blocksize);
+                    choose.SetRandomParameters(test_or_not, testmode, testtime, testnum,blocksize,record_test,threadnum);
                 }
                 else
                 {
-                    choose.SetOrderParameters(test_or_not, testmode, testdatamode, testpercent, blocksize, testtime, testnum, testcircle);
+                    choose.SetOrderParameters(test_or_not, testmode, testdatamode, testpercent, blocksize, testtime, testnum, testcircle,record_test,threadnum);
                 }
+                //Console.WriteLine("blocksize: " + blocksize);
+                TransfChooseINF(choose);
             }
-            TransfChooseINF(choose);
+            if(test_or_not)
+            {
+                TransfRepeatTest(repeat_test);
+            }
+            
             MessageBox.Show("设置完成");
         }
         /// <summary>
@@ -231,6 +268,16 @@ namespace DiskTest11
                 CircleNumble.Enabled = true;//循环次数
                 TestTime.Enabled = false;
             }
+        }
+
+        private void label9_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ThreadNumble_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

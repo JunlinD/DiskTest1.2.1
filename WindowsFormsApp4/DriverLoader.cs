@@ -90,6 +90,7 @@ namespace DiskTestLib
                 _DirverStream.Write(SectorBytes, 0, 512*blockszie); //写入扇区  
                 //_DirverStream.Position = SectorIndex * (512 + 1);
                 //_DirverStream.Write(SectorBytes, 512, 512);
+                _DirverStream.Flush();
             }
             catch(Exception e)
             {
@@ -144,6 +145,9 @@ namespace DiskTestLib
         public long TestTime;
         public int TestCircle;
         public long TestNum;
+        public bool Record;
+        public int ThreadNum;
+        public int DriverIndex;
         public ChooseInformation()
         {
             TestOrNot = false;
@@ -154,18 +158,23 @@ namespace DiskTestLib
             TestTime = 0;
             TestCircle = 0;
             TestNum = 0;
+            ThreadNum = 1;
+            DriverIndex = 0;
+            Record = false;
         }
-        public void SetRandomParameters(bool testornot, int testmode, long testtime, long testnum,int blocksize)
+        public void SetRandomParameters(bool testornot, int testmode, long testtime, long testnum,int blocksize,bool record,int threadnum)
         {
             TestOrNot = testornot;
             TestMode = testmode;
             TestTime = testtime;
             TestNum = testnum;
             BlockSize = blocksize;
+            Record = record;
+            ThreadNum = threadnum;
             if (testmode == -1||(testtime==0&&testnum==0))
                 TestOrNot = false;
         }
-        public void SetOrderParameters(bool testornot, int testmode, int testdatamode, int testpercent, int blocksize, long testtime, long testnum, int testcircle)
+        public void SetOrderParameters(bool testornot, int testmode, int testdatamode, int testpercent, int blocksize, long testtime, long testnum, int testcircle,bool record,int threadnum)
         {
             TestOrNot = testornot;
             TestMode = testmode;
@@ -175,10 +184,24 @@ namespace DiskTestLib
             TestTime = testtime;
             TestCircle = testcircle;
             TestNum = testnum;
+            Record = record;
+            ThreadNum = threadnum;
             if (testmode == -1 || blocksize == 0)
             {
                 TestOrNot = false;
             }
+        }
+    }
+    public class MultiThreadInfo
+    {
+        public ChooseInformation chooseInformation;
+        public int threadIndex;
+        public DriverLoader driverLoader;
+        public MultiThreadInfo(DriverLoader driver,ChooseInformation choose,int index)
+        {
+            driverLoader = driver;
+            chooseInformation = choose;
+            threadIndex = index;
         }
     }
     public class TestInformation
@@ -199,15 +222,6 @@ namespace DiskTestLib
             Correct_Data = correct;
             Error_Data = error;
         }
-        /*public string ReturnInformation()
-        {
-            if (Information_Mode == DATA_ERROR)
-                return new string(Driver_Name + " 出现数据错误！" + "    " + DateTime + "   错误数据是：" + Error_Data + "   正确数据是：" + Correct_Data);
-            else if(Information_Mode == DISK_ERROR)
-                return new string(Driver_Name + " 出现硬盘错误！" + "    " + DateTime + "   掉盘错误");
-            else
-                return "没有错误";
-        }*/
     }
     
 }

@@ -33,8 +33,11 @@ namespace DiskTest11
             diskSetting.AddSwitchObserver(new SwitchEventHandler(Aside.SelectPage));
             diskSetting.AddLogObserver(new LogEventHandler(log.LogEvent));
             diskSetting.AddLogObserver(new LogEventHandler(logging.LoggingEvent));
+            diskSetting.AddAvgSpeedObserver(new AvgSpeedEventHandler(test2.ReceiveAvgSpeedEvent));
+            diskSetting.AddCircleNumObserver(new CircleNumHandler(test2.ReceiveCircleNumEvent));
             test2.addStopTestOberver(new StopTestEventHandler(diskSetting.Get_Stop_Button_Status_Event));
             diskSetting.AddStartTimeObserver(new StartTimeEventHandler(test2.GetStartTimeEvent));
+            diskSetting.AddTestTimeObserver(new TestTimeEventHandler(test2.ReceiveTestTimeEvent));
             TreeNode parent = Aside.CreateNode("Setting", pageIndex);
             Aside.CreateChildNode(parent, AddPage(diskSetting, ++pageIndex));
             Aside.CreateChildNode(parent, AddPage(new Errors(), ++pageIndex));
@@ -42,7 +45,6 @@ namespace DiskTest11
             pageIndex = 200;
             parent = Aside.CreateNode("Test", pageIndex);
             Aside.CreateChildNode(parent, AddPage(test2, ++pageIndex));
-            Aside.CreateChildNode(parent, AddPage(new Test(), ++pageIndex));
             Aside.CreateChildNode(parent, AddPage(log, ++pageIndex));
             Aside.CreateChildNode(parent, AddPage(new Information(), ++pageIndex));
             Aside.SelectPage(101);

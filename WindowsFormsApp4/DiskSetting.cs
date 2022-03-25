@@ -1,15 +1,17 @@
 ﻿using DiskTestLib;
 using System;
 using System.Collections;
+using System.IO;
 using System.Management;
 using System.Threading;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace DiskTest11
 {
     public delegate void WriteBlockCompleteHandler(double speed);
-    public delegate void ReadBlockComleteHandler(double speed);
-    public delegate void NotifyEventHandler(int i,double speed,double written_MB,string now_time);//进度条
+    public delegate void AvgSpeedEventHandler(double speed);
+    public delegate void NotifyEventHandler(int i, double speed, double written_MB, string now_time);//进度条
     /// <summary>
     /// 进度条百分比和当前时间的委托
     /// </summary>
@@ -25,8 +27,22 @@ namespace DiskTest11
     public delegate void SwitchEventHandler(int i);//切换页面
     public delegate void LogEventHandler(string s);//日志
     public delegate void StartTimeEventHandler(string s);//日志
+    public delegate void TestTimeEventHandler();
+    public delegate void CircleNumHandler(int circlenum);
     public partial class DiskSetting : Sunny.UI.UIPage
     {
+        /// <summary>
+        /// 信号量
+        /// </summary>
+        public static Mutex mutex = new Mutex();
+        public static Mutex RandomTestMutex = new Mutex();
+        public static Mutex TimeMutex = new Mutex();
+        public static Mutex speed_mutex = new Mutex();
+        public static Mutex ErrorNumMutex = new Mutex();
+        /// <summary>
+        /// 计算百分比的信号量
+        /// </summary>
+        public static Mutex percent_mutex = new Mutex();
         /// <summary>
         /// 默认块大小
         /// </summary>
@@ -34,7 +50,7 @@ namespace DiskTest11
         /// <summary>
         /// 1MB的实际字节数
         /// </summary>
-        private const int MB=1048576;
+        private const int MB = 1048576;
         /// <summary>
         /// 一个静态全局变量，用于在Compute_OnceBlockTime函数中区分读，写，验证，VERTIFY是验证
         /// </summary>
@@ -98,12 +114,29 @@ namespace DiskTest11
         public SwitchEventHandler SwitchEvent;//切换界面
         public LogEventHandler LogEvent;//日志打印
         public StartTimeEventHandler StartTimeEvent;//传递开始时间
-        public int now_index_framework=0;//当前点击的硬盘项
+        public TestTimeEventHandler TestTimeEvent;
+        public CircleNumHandler CircleNumEvent;
+        /// <summary>
+        /// 传递平均速度的事件
+        /// </summary>
+        public AvgSpeedEventHandler AvgSpeedEvent;
+        /// <summary>
+        /// 当前点击的硬盘项的数字
+        /// </summary>
+        public int Now_Index_Framework = 0;
         /// <summary>
         /// 当前测试状态，是停止，还是继续；
         /// </summary>
         public bool Test_Status;
+        /// <summary>
+        /// 用于判断判断是否复现上一次测试的标志位
+        /// </summary>
+        private bool Repeat_Status;
+        /// <summary>
+        /// 用于测试的暂停和开始的变量
+        /// </summary>
         private static AutoResetEvent resetEvent = new AutoResetEvent(true);
+        private AutoResetEvent[] resetEvents;
         /// <summary>
         /// 一个块包含的字节数
         /// </summary>
@@ -149,44 +182,139 @@ namespace DiskTest11
         /// </summary>
         private int Slow_INR;
         /// <summary>
+        /// 用于多线程计算占的总百分比
+        /// </summary>
+        private long TOTAL_TEST;
+        /// <summary>
+        /// 暂停间隔时间
+        /// </summary>
+        private long Gap_Time;
+        private long Gap_Start_Time;
+        private long Gap_End_Time;
+        /// <summary>
+        /// 用于统计多线程MB的总数
+        /// </summary>
+        private double TOTAL_MB;
+        /// <summary>
         /// 由于是通过选择容量百分比来决定测试的空间，所以这个变量表示的就是顺序测试中你要测试到的扇区数
         /// </summary>
         private long Order_Max_Block;
+        private int NOW_CIRCLE;
+        
+        /// <summary>
+        /// 一个线程计算的扇区数
+        /// </summary>
+        private long GapSectorNumble;
         /// <summary>
         /// 显示硬盘信息的对象数组
         /// </summary>
         public Disk[] Ed;
-        public ArrayList Disk_Driver_List = new ArrayList();
-        public ArrayList Disk_Choose_Information = new ArrayList();
-        public ArrayList Disk_Choose_Information_List = new ArrayList();//新的choose数组
-        public ArrayList Disk_Information_List = new ArrayList();
-        public ChooseInformation Temp_Choose=new ChooseInformation();//临时choose变量
-        public WriteBlockCompleteHandler GetWriteSpeed;
-        public ReadBlockComleteHandler GetReadSpeed;
         /// <summary>
-        /// 测试数组
+        /// 存放测试类的动态数组
+        /// </summary>
+        public ArrayList Disk_Driver_List = new ArrayList();
+        /// <summary>
+        /// 存放测试选项的类的数组
+        /// </summary>
+        public ArrayList Disk_Choose_Information_List = new ArrayList();
+        public ArrayList Disk_Information_List = new ArrayList();
+        /// <summary>
+        /// 存放每个硬盘是否要重复测试的状态信息
+        /// </summary>
+        private ArrayList Repeat_Test_Status_List = new ArrayList();
+        /// <summary>
+        /// 临时的choose变量，用于choose_information的赋值
+        /// </summary>
+        public ChooseInformation Temp_Choose = new ChooseInformation();
+        public WriteBlockCompleteHandler GetWriteSpeed;
+        /// <summary>
+        /// 写入的数组
         /// </summary>
         private byte[] TestArray;
+        /// <summary>
+        /// 读取的数组
+        /// </summary>
         private byte[] CompareArray;
+        /// <summary>
+        /// 用来统计累积平均速度
+        /// </summary>
+        private double NOW_SPEED;
+        private long NOW_SPEED_NUM;
+        private Stopwatch[] stopwatches;
+        private Stopwatch Time_StopWatch;
+        /// <summary>
+        /// 计算读写速度的结构体
+        /// </summary>
         struct SPEED_COMPUTE
         {
+            /// <summary>
+            /// 开始时间
+            /// </summary>
             public long Start_Time;
+            /// <summary>
+            /// 结束时间
+            /// </summary>
             public long End_Time;
+            /// <summary>
+            /// 单次时间
+            /// </summary>
             public long Once_Time;
+            /// <summary>
+            /// 总的时间
+            /// </summary>
             public long Total_Time;
+            /// <summary>
+            /// 初始化
+            /// </summary>
+            /// <param name="i"></param>
             public static implicit operator SPEED_COMPUTE(long i)
             {
-                return new SPEED_COMPUTE() { Start_Time = 0, End_Time=0,Once_Time=0,Total_Time=i };
+                return new SPEED_COMPUTE() { Start_Time = 0, End_Time = 0, Once_Time = 0, Total_Time = i };
+            }
+        }
+        struct AVG_SPEED_COMPUTE
+        {
+            public double SPEED;
+            public int NUM;
+            public static implicit operator AVG_SPEED_COMPUTE(int i)
+            {
+                return new AVG_SPEED_COMPUTE() { NUM = i, SPEED = 0 };
             }
         }
         private SPEED_COMPUTE Speed_Compute;
+        private AVG_SPEED_COMPUTE Avg_Speed_Compute;
+        private FileStream RecordStream;
         public DiskSetting()
-        {           
+        {
             InitializeComponent();
             Init_Disk_Information();
             Init_Disk_Framework();
-            Init_Choose_ArrayList();
+            Init_Choose_And_Repeat_Status_ArrayList();
+            Init_Disk_Setting_Param();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(134)));
+            Show_Disk();
+            for (int i = 0; i < Disk_Information_List.Count; i++)
+            {
+                Ed[i].TransfChooseINF += Get_Transf_Choose_INF_Event;
+                Ed[i].TransfRepeatTest += Get_Repeat_Test_Status_Event;
+            }
+            /*if (Disk_Choose_Information_List.Count > 0 || Temp_Choose != null)
+            {
+                //Disk_Choose_Information_List[0] = Temp_Choose;
+            }
+            else
+            {
+                MessageBox.Show("测试项为空--Temp_Choose==null");
+            }*/
+        }
+        /// <summary>
+        /// 初始化需要用到的变量
+        /// </summary>
+        private void Init_Disk_Setting_Param()
+        {
             Speed_Compute = 0;
+            Avg_Speed_Compute = 0;
             Block_Bytes = 0;
             Total_Bytes = 0;
             Once_Bytes = 0;
@@ -198,49 +326,52 @@ namespace DiskTest11
             Now_Pos = 0;
             Fast_INR = 0;
             Slow_INR = 0;
+            GapSectorNumble = 0;
             Order_Max_Block = 0;
+            NOW_SPEED = 0;
+            TOTAL_TEST = 0;
+            NOW_SPEED_NUM = 0;
+            TOTAL_MB = 0;
+            Gap_Time = 0;
+            Gap_End_Time = 0;
+            Gap_Start_Time = 0;
+            NOW_CIRCLE = 0;
+            stopwatches = new Stopwatch[1];
+            stopwatches[0] = new Stopwatch();
+            Time_StopWatch = new Stopwatch();
+            resetEvents = new AutoResetEvent[1];
+            resetEvents[0] = new AutoResetEvent(true);
             Test_Status = true;
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;            
-            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel, ((byte)(134)));
-            Show_Disk();
-            for(int i=0;i<Disk_Information_List.Count;i++)
-            {
-                Ed[i].TransfChooseINF += Get_Transf_Choose_INF_Event;
-            }
-            if (Disk_Choose_Information_List.Count > 0 || Temp_Choose != null)
-            {
-                Disk_Choose_Information_List[0] = Temp_Choose;
-            }
-            else
-            {
-                MessageBox.Show("测试项为空--Temp_Choose==null");
-            }
+            RecordStream = null;
         }
         public void Init_Disk_Framework()
         {
-            if(Disk_Information_List.Count>0)
+            if (Disk_Information_List.Count > 0)
             {
                 Ed = new Disk[Disk_Information_List.Count];
-                for(int i=0;i<Disk_Information_List.Count;i++)
+                for (int i = 0; i < Disk_Information_List.Count; i++)
                 {
                     Ed[i] = new Disk();
                 }
             }
         }
-        public void  Init_Choose_ArrayList()
+        public void Init_Choose_And_Repeat_Status_ArrayList()
         {
-            if(Disk_Information_List.Count>0)
+            Disk_Choose_Information_List.Clear();
+            if (Disk_Information_List.Count > 0)
             {
-                for(int i=0;i<Disk_Information_List.Count;i++)
+                for (int i = 0; i < Disk_Information_List.Count; i++)
                 {
                     ChooseInformation choose = new ChooseInformation();
                     Disk_Choose_Information_List.Add(choose);
+                    bool repeat_status = false;
+                    Repeat_Test_Status_List.Add(repeat_status);
                 }
             }
-        }        
+        }
         public void Show_Disk()
         {
-            if(Ed!=null)
+            if (Ed != null)
             {
                 Ed[0].Show();
                 panel1.Controls.Add(Ed[0]);
@@ -264,6 +395,10 @@ namespace DiskTest11
         {
             StartTimeEvent += observer;
         }
+        public void AddAvgSpeedObserver(AvgSpeedEventHandler observer)
+        {
+            AvgSpeedEvent += observer;
+        }
         public void AddProcessAndTimeObserver(NotifyProcessAndTimeHandler observer)
         {
             ProcessAndTimeEvent += observer;
@@ -276,7 +411,35 @@ namespace DiskTest11
         {
             WrittenAndSpeedEvent += observer;
         }
-
+        public void AddTestTimeObserver(TestTimeEventHandler observer)
+        {
+            TestTimeEvent += observer;
+        }
+        public void AddCircleNumObserver(CircleNumHandler observer)
+        {
+            CircleNumEvent += observer;
+        }
+        public void SendTestTime()
+        {
+            TestTimeEvent();
+        }
+        public void SendTestTime_Thread(object obj)
+        {
+            long starttime;
+            long endtime;
+            starttime = Environment.TickCount;
+            Console.WriteLine("开始传秒");
+            while(true)
+            {
+                if (Percent >= 100)
+                    break;
+                endtime = Environment.TickCount;
+                if((endtime-starttime)%1000==0)
+                {
+                    TestTimeEvent();
+                }
+            }
+        }
         /// <summary>
         /// 广播速度，已读写量等信息，事件的具体实现，将这个组件的信息传给所有的观察者，让观察者执行相应的函数
         /// </summary>
@@ -284,13 +447,17 @@ namespace DiskTest11
         /// <param name="speed"></param>
         /// <param name="wirtten_MB"></param>
         /// <param name="now_time"></param>
-        public void PublishNotify(int i,double speed,double wirtten_MB,string now_time)
+        public void PublishNotify(int i, double speed, double wirtten_MB, string now_time)
         {
             if (NotifyEvent != null)
             {
-                NotifyEvent(i,speed,wirtten_MB,now_time);
+                NotifyEvent(i, speed, wirtten_MB, now_time);
             }
         }
+        /// <summary>
+        /// 切换页面的函数，将需要切换的的页码i传递到Form
+        /// </summary>
+        /// <param name="i"></param>
         public void SwitchPage(int i)
         {
             if (SwitchEvent != null)
@@ -298,46 +465,68 @@ namespace DiskTest11
                 SwitchEvent(i);
             }
         }
+        /// <summary>
+        /// 打印测试信息
+        /// </summary>
+        /// <param name="s">需要打印的信息的字符串</param>
         public void PrintLog(string s)
         {
-            if(LogEvent!=null)
+            if (LogEvent != null)
             {
                 LogEvent(s);
             }
         }
+        /// <summary>
+        /// 向另一个控件Test2传递开始时间
+        /// </summary>
+        /// <param name="s"></param>
         public void PublishStartTime(string s)
         {
-            if(StartTimeEvent!=null)
+            if (StartTimeEvent != null)
             {
                 StartTimeEvent(s);
             }
         }
-        public void PublishProcessAndTime(int i,string now_time)
+        /// <summary>
+        /// 从DiskSetting向Test2控件传输进度条和累积测试时间
+        /// </summary>
+        /// <param name="i">进度条的百分比</param>
+        /// <param name="now_time"></param>
+        public void PublishProcessAndTime(int i, string now_time)
         {
-            if(ProcessAndTimeEvent!=null)
+            if (ProcessAndTimeEvent != null)
             {
                 ProcessAndTimeEvent(i, now_time);
             }
         }
-        public void PublishWrittenAndSpeed(double speed,double written_MB)
+        /// <summary>
+        /// 从DiskSetting向Test2控件传输测试速度和已写MB数
+        /// </summary>
+        /// <param name="speed">测试速度</param>
+        /// <param name="written_MB">已写MB数</param>
+        public void PublishWrittenAndSpeed(double speed, double written_MB)
         {
-            if(WrittenAndSpeedEvent!=null)
+            if (WrittenAndSpeedEvent != null)
             {
                 WrittenAndSpeedEvent(speed, written_MB);
             }
+        }
+        public void PublishAvgSpeed(double speed)
+        {
+            if (AvgSpeedEvent != null) AvgSpeedEvent(speed);
+        }
+        public void PublishCircleNum(int circlenum)
+        {
+            if (CircleNumEvent != null) CircleNumEvent(circlenum);
         }
         /// <summary>
         /// 从Disk.cs中获取测试的选项信息
         /// </summary>
         /// <param name="value"></param>
-        public void Get_Disk_Information_Event(ArrayList value)
-        {
-            Disk_Information_List = value;
-        }
         public void Get_Transf_Choose_INF_Event(ChooseInformation choose)
         {
-            Temp_Choose = choose;
-            Disk_Choose_Information_List[now_index_framework] = choose;
+            //Temp_Choose = choose;
+            Disk_Choose_Information_List[Now_Index_Framework] = choose;
         }
         /// <summary>
         /// 获取Stop按钮的信息，并改变当前的Test_Status，判断是暂停还是恢复
@@ -345,51 +534,159 @@ namespace DiskTest11
         /// <param name="status">Stop按钮传过来的状态参数</param>
         public void Get_Stop_Button_Status_Event(bool status)
         {
-           if(Test_Status==false&&status==true)//当前是暂停，要恢复
-           {
+            if (Test_Status == false && status == true)//当前是暂停，要恢复
+            {
                 Test_Status = status;
-                resetEvent.Set();
-           }
+                //resetEvent.Set();
+                for(int i=0;i<resetEvents.Length;i++)
+                {
+                    resetEvents[i].Set();
+                    
+                }
+                if (!Time_StopWatch.IsRunning)
+                    Time_StopWatch.Start();
+                Gap_End_Time = Environment.TickCount;
+                Gap_Time += Gap_End_Time - Gap_Start_Time;
+            }
             else
             {
                 Test_Status = status;
             }
         }
-        private void Start_Test(Object obj)
+        /// <summary>
+        /// 从Disk中获取Repeat_Test的状态
+        /// </summary>
+        /// <param name="status"></param>
+        public void Get_Repeat_Test_Status_Event(bool status)
         {
+            Repeat_Test_Status_List[Now_Index_Framework] = status;
+        }
+        public ChooseInformation Init_Repeat_Test_INF()
+        {
+            ChooseInformation choose = new ChooseInformation();
+            ReadRecord readRecord = new ReadRecord();
+            int test_mode = readRecord.Read_Test_Mode();
+            if (test_mode >= RANDOM_VERTIFY && test_mode <= RANDOM_WRITE)
+            {
+                int block_size = readRecord.Read_Block_Size();
+                long test_time = readRecord.Read_Test_Time();
+                long test_num = readRecord.Read_Test_Num();
+                int thread_num = readRecord.Read_Thread();
+                choose.SetRandomParameters(true, test_mode, test_time, test_num, block_size, true,thread_num);
+            }
+            else
+            {
+                int data_mode = readRecord.Read_Data_Mode();
+                int block_size = readRecord.Read_Block_Size();
+                int size = readRecord.Read_Size();
+                int thread_num = readRecord.Read_Thread();
+                int circle_num = readRecord.Read_Circle();
+                choose.SetOrderParameters(true, test_mode, data_mode, size, block_size, 0, 0, circle_num, true,thread_num);
+            }
+            readRecord.Finish();
+            return choose;
+        }
+        /// <summary>
+        /// 开始测试的函数
+        /// </summary>
+        /// <param name="obj"></param>
+        private void Start_Test(object obj)
+        {
+            Time_StopWatch.Reset();
+            NOW_CIRCLE = 0;
             if (Disk_Choose_Information_List.Count <= 0)
             {
                 MessageBox.Show("测试信息数组为空");
             }
             for (int i = 0; i < Disk_Choose_Information_List.Count; i++)
             {
-                ChooseInformation chooseInformation = (ChooseInformation)Disk_Choose_Information_List[i];
+                ChooseInformation chooseInformation;
+                if ((bool)Repeat_Test_Status_List[i])
+                {
+                    Console.WriteLine("Repeat last test!");
+                    chooseInformation = Init_Repeat_Test_INF();
+                    Repeat_Status = true;
+                }
+                else
+                {
+                    Console.WriteLine("No Repeat last test!");
+                    chooseInformation = (ChooseInformation)Disk_Choose_Information_List[i];
+                    Repeat_Status = false;
+                }
+                chooseInformation.DriverIndex = i;
+
                 if (chooseInformation.TestOrNot == true)
                 {
-                    if(chooseInformation.TestMode==0)
+                    DiskInformation info = (DiskInformation)Disk_Information_List[i];
+                    ShowInfoTip(info.Physical_Name+ " 驱动器开始测试");
+                    if (chooseInformation.TestMode == RANDOM_VERTIFY)
                     {
-                        RandomWriteAndVerify(i, chooseInformation.TestNum, chooseInformation.TestTime, 2, chooseInformation.BlockSize);
+                        MultiRandomWriteAndVerifyCT(chooseInformation);
+                        //RandomWriteAndVerify(i, chooseInformation.TestNum, chooseInformation.TestTime, 2, chooseInformation.BlockSize);
                     }
-                    else if (chooseInformation.TestMode == 1)//随机只读
+                    //else if (chooseInformation.TestMode == RANDOM_VERTIFY && Repeat_Status == true)
+                    //{
+                    //    RandomWriteAndVerify_Repeat(i, chooseInformation.TestNum, chooseInformation.TestTime, 2, chooseInformation.BlockSize);
+                    //}
+                    else if (chooseInformation.TestMode == RANDOM_READ)//随机只读
                     {
-                        RandomOnlyRead(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
+                        MultiRandomOnlyReadCT(chooseInformation);
+                        //RandomOnlyRead(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
                     }
-                    else if (chooseInformation.TestMode == 2)//随机只写
+                    //else if (chooseInformation.TestMode == RANDOM_READ && Repeat_Status == true)//随机只读
+                    //{
+                     //   RandomOnlyRead_Repeat(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
+                    //}
+                    else if (chooseInformation.TestMode == RANDOM_WRITE )//随机只写
                     {
-                        RandomOnlyWrite(i, chooseInformation.TestNum, chooseInformation.TestTime,2, chooseInformation.BlockSize);
+                        MultiRandomOnlyWriteCT(chooseInformation);
+                        //RandomOnlyWrite(i, chooseInformation.TestNum, chooseInformation.TestTime, 2, chooseInformation.BlockSize);
                     }
-                    else if (chooseInformation.TestMode == 3)//顺序读写验证
+                    //else if (chooseInformation.TestMode == RANDOM_WRITE && Repeat_Status == true)//随机只写
+                    //{
+                     //   RandomOnlyWrite_Repeat(i, chooseInformation.TestNum, chooseInformation.TestTime, 2, chooseInformation.BlockSize);
+                    //}
+                    else if (chooseInformation.TestMode == ORDER_VERTIFY)//顺序读写验证
                     {
-                        OrderWriteAndVerify(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
+                        //OrderWriteAndVerify(chooseInformation);
+                        MultiOrderWriteAndVerifyCT(chooseInformation);
+                        //OrderWriteAndVertify_one(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
                     }
-                    else if (chooseInformation.TestMode == 4)//顺序只读
+                   // else if (chooseInformation.TestMode == ORDER_VERTIFY && Repeat_Status == true)//顺序读写验证
+                    //{
+                     //   OrderWriteAndVerify_Repeat(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
+                   //     
+                   // }
+                    else if (chooseInformation.TestMode == ORDER_READ )//顺序只读
                     {
-                        OrderOnlyRead(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
+                        //for(int j=0;j<chooseInformation.TestCircle;j++)
+                        //{
+                            //TestDelegate test = MultiOrderOnlyReadCT;
+                            //IAsyncResult asyncResult = test.BeginInvoke(chooseInformation, null, null);
+                            //test.EndInvoke(asyncResult);
+                            MultiOrderOnlyReadCT(chooseInformation);                           
+                            //ShowInfoTip("第" + j + 1 + "次循环开始");
+                            
+                       // }
+                        //MultiOrderOnlyReadCT(chooseInformation);
+                        //OrderOnlyRead(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
                     }
-                    else if (chooseInformation.TestMode == 5)//顺序只写
+                    //else if (chooseInformation.TestMode == ORDER_READ && Repeat_Status == true)//顺序只读
+                    //{
+                    //    OrderOnlyRead_Repeat(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
+                    //}
+                    else if (chooseInformation.TestMode == ORDER_WRITE )//顺序只写
                     {
-                        OrderOnlyWrite(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
+                        //TestDelegate test = MultiOrderOnlyWriteCT;
+                        //IAsyncResult asyncResult=test.BeginInvoke(chooseInformation,null,null);
+                        //test.EndInvoke(asyncResult);
+                        MultiOrderOnlyWriteCT(chooseInformation);
+                        //OrderOnlyWrite(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
                     }
+                    //else if (chooseInformation.TestMode == ORDER_WRITE && Repeat_Status == true)//顺序只写
+                    //{
+                    //    OrderOnlyWrite_Repeat(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
+                    //}
                     else
                     {
                         MessageBox.Show("测试模式错误！");
@@ -397,7 +694,7 @@ namespace DiskTest11
                 }
                 else
                 {
-                    MessageBox.Show("该磁盘无法进行测试，请检查选项");
+                    
                 }
             }
         }
@@ -410,11 +707,14 @@ namespace DiskTest11
         {
 
             Init_Disk_Driver();
-            GetWriteSpeed = OutWriteSpeed;
-            System.Threading.Thread thr = new System.Threading.Thread(new System.Threading.ParameterizedThreadStart(Start_Test));
-            thr.Start();
+            //GetWriteSpeed = OutWriteSpeed;
             this.SwitchPage(201);
             this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+            Thread thr = new Thread(new ParameterizedThreadStart(Start_Test));
+            thr.Start();
+            
+            
+            
         }
         /// <summary>
         /// 初始化读写测试IO--命名为Disk_Driver
@@ -432,7 +732,7 @@ namespace DiskTest11
                 DriverLoader driver = new DriverLoader(information);
                 Disk_Driver_List.Add(driver);
             }
-        }      
+        }
         /// <summary>
         /// 获取硬盘信息的函数
         /// </summary>
@@ -442,6 +742,8 @@ namespace DiskTest11
             ManagementObjectCollection moc = Diskobject.GetInstances();//获取对象信息的集合            
             int id = 0;
             int i = 1;
+            Disk_Information_List.Clear();
+            this.Disk_Information_Framework.Rows.Clear();
             foreach (ManagementObject mo in moc)
             {
                 if (mo.Properties["InterfaceType"].Value.ToString() == "USB")
@@ -504,12 +806,21 @@ namespace DiskTest11
         /// <returns></returns>
         private int Compute_Last_Block_Size(int block_size)
         {
-            if (Now_Pos + block_size >= Order_Max_Block) 
+            if (Now_Pos + block_size >= Order_Max_Block)
             {
                 block_size = (int)(Order_Max_Block - Now_Pos);
                 Block_Bytes = DEAFAUT_BLOCKSIZE * block_size;
                 CompareArray = new byte[Block_Bytes];
-                return block_size; 
+                return block_size;
+            }
+            else return block_size;
+        }
+        private int Compute_Last_Block_Size_multi(int block_size, long now_pos, long max_pos)
+        {
+            if (now_pos + block_size >= max_pos)
+            {
+                block_size = (int)(max_pos - now_pos);
+                return block_size;
             }
             else return block_size;
         }
@@ -529,25 +840,89 @@ namespace DiskTest11
         /// <param name="pos"></param>
         /// <param name="block_size"></param>
         /// <param name="compute_mode"></param>
-        private void Compute_OnceBlockTime(DriverLoader driver,long pos,int block_size,int compute_mode)
+        private void Compute_OnceBlockTime(DriverLoader driver, long pos, int block_size, int compute_mode)
         {
             Speed_Compute.Start_Time = Environment.TickCount;
-            if(compute_mode==VERTIFY)
+            if (compute_mode == VERTIFY)
             {
                 driver.WritSector(TestArray, pos, block_size);
                 CompareArray = driver.ReadSector(pos, block_size);
             }
-            else if(compute_mode==WRITE)
+            else if (compute_mode == WRITE)
             {
                 driver.WritSector(TestArray, pos, block_size);
             }
-            else if(compute_mode==READ)
+            else if (compute_mode == READ)
             {
                 CompareArray = driver.ReadSector(pos, block_size);
             }
             Speed_Compute.End_Time = Environment.TickCount;
             Speed_Compute.Once_Time = Speed_Compute.End_Time - Speed_Compute.Start_Time;
             Speed_Compute.Total_Time += Speed_Compute.Once_Time;
+        }
+        private void Compute_OnceBlockTime_multi(DriverLoader driver, long pos, int block_size, int compute_mode,SPEED_COMPUTE speed_compute)
+        {
+            speed_compute.Start_Time = Environment.TickCount;
+            if (compute_mode == VERTIFY)
+            {
+                driver.WritSector(TestArray, pos, block_size);
+                CompareArray = driver.ReadSector(pos, block_size);
+            }
+            else if (compute_mode == WRITE)
+            {
+                driver.WritSector(TestArray, pos, block_size);
+            }
+            else if (compute_mode == READ)
+            {
+                CompareArray = driver.ReadSector(pos, block_size);
+            }
+            speed_compute.End_Time = Environment.TickCount;
+            speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
+            speed_compute.Total_Time += speed_compute.Once_Time;
+        }
+        private byte[] Compute_OnceBlockTimemulti(DriverLoader driver, long pos, int block_size, int compute_mode,byte []testarray,byte []comparearray)
+        {
+            //Speed_Compute.Start_Time = Environment.TickCount;
+            if (compute_mode == VERTIFY)
+            {
+                //Console.WriteLine("准备获取信号量");
+                mutex.WaitOne();
+                //Console.WriteLine("获取到了信号量");
+                //Console.WriteLine("comparearray.length: "+comparearray.Length);
+                driver.WritSector(testarray, pos, block_size);               
+                comparearray= driver.ReadSector(pos, block_size);
+                mutex.ReleaseMutex();
+                //Console.WriteLine("释放了了信号量");
+            }
+            else if (compute_mode == WRITE)
+            {
+                mutex.WaitOne();
+                driver.WritSector(testarray, pos, block_size);
+                mutex.ReleaseMutex();
+            }
+            else if (compute_mode == READ)
+            {
+                mutex.WaitOne();
+                comparearray = driver.ReadSector(pos, block_size);
+                mutex.ReleaseMutex();
+            }
+            else
+            {
+                Console.WriteLine("读写模式不对");
+            }
+            //Speed_Compute.End_Time = Environment.TickCount;
+            //Speed_Compute.Once_Time = Speed_Compute.End_Time - Speed_Compute.Start_Time;
+            //Console.WriteLine("once_time: " + Speed_Compute.Once_Time);
+            //Speed_Compute.Total_Time += Speed_Compute.Once_Time;
+            return comparearray;
+        }
+        /// <summary>
+        /// 计算平均速度
+        /// </summary>
+        /// <returns>返回平均速度</returns>
+        private double Compute_Avg_Speed()
+        {
+            return NOW_SPEED / NOW_SPEED_NUM;
         }
         /// <summary>
         /// 根据测试模式的不同，打印测试完成的信息
@@ -557,7 +932,7 @@ namespace DiskTest11
         /// <param name="time">测试时间，在随机测试中会使用到</param>
         /// <param name="num">测试次数，在随机测试中会使用到</param>
         /// <param name="max_sector">目标扇区块数</param>
-        private void Complete_Information_Print(int Error_num, int Test_Mode, long time = 0, long num = 0,long max_sector=0)
+        private void Complete_Information_Print(int Error_num, int Test_Mode, long time = 0, long num = 0, long max_sector = 0)
         {
             if (Error_num == 0)
             {
@@ -619,21 +994,23 @@ namespace DiskTest11
                         break;
                 }
             }
-            if (num != 0&&time==0&&max_sector==0)
+            if (num != 0 && time == 0 && max_sector == 0)
             {
                 Console.WriteLine("测试次数：" + num + "次");
                 this.PrintLog("测试次数：" + num + "次");
             }
-            else if(num == 0 && time != 0 && max_sector == 0)
+            else if (num == 0 && time != 0 && max_sector == 0)
             {
                 Console.WriteLine("测试时间：" + time + "ms");
                 this.PrintLog("测试时间：" + time + "ms");
             }
             else
             {
-                Console.WriteLine("测试到目标扇区：" + max_sector + "ms");
-                this.PrintLog("测试到目标扇区：" + max_sector + "ms");
+                Console.WriteLine("测试到目标扇区：" + max_sector + "块");
+                this.PrintLog("测试到目标扇区：" + max_sector + "块");
             }
+            this.PublishAvgSpeed(Compute_Avg_Speed());
+            Console.WriteLine("平均速度是：" + Compute_Avg_Speed() + "MB/s");
 
         }
         /// <summary>
@@ -645,17 +1022,59 @@ namespace DiskTest11
             double once_mb = (double)Once_Bytes / (double)MB;
             double now_speed = ((1000 * once_mb) / (Speed_Compute.Total_Time));//累计读写字节除以时间                        
             GetWriteSpeed?.Invoke(now_speed);
+            if (Percent == 99)
+            {
+                Console.WriteLine("Percent is 99");
+            }
             if (now_speed == 0)
             {
                 Console.WriteLine("speed is 0!");
+                return;
             }
-            if (double.IsNaN(now_speed))
+            if (now_speed > 10000000000)
             {
                 Console.WriteLine("speed is NaN!");
+                return;
             }
             Speed_Compute.Total_Time = 0;
             this.PublishWrittenAndSpeed(now_speed, now_MB);
+            Add_Speed_And_Num(now_speed);
             Once_Bytes = 0;
+        }
+        private double Compute_OnceBlockSpeed_multi(SPEED_COMPUTE speed_compte,long total_bytes,long once_bytes)
+        {
+            double now_MB = total_bytes / MB;
+            double once_mb = (double)once_bytes / (double)MB;
+            double now_speed = ((1000 * once_mb) / (speed_compte.Total_Time));//累计读写字节除以时间                                   
+            if (Percent == 99)
+            {
+                Console.WriteLine("Percent is 99");
+            }
+            if (now_speed == 0)
+            {
+                Console.WriteLine("speed is 0!");
+                return 0;
+            }
+            if (now_speed > 10000000000)
+            {
+                Console.WriteLine("speed is NaN!");
+                return 0;
+            }
+            //Speed_Compute.Total_Time = 0;//注意待会加一行清0
+            
+            speed_mutex.WaitOne();           
+            NOW_SPEED += now_speed;
+            NOW_SPEED_NUM++;
+            TOTAL_MB += once_mb;
+            speed_mutex.ReleaseMutex();
+            Console.WriteLine("NOW_SPEED: " + NOW_SPEED + " NOW_SPEED_NUM: " + NOW_SPEED_NUM + " now_speed: " + now_speed+" oncebytes: "+once_bytes+" time: "+speed_compte.Total_Time+" ms");
+            Add_Speed_And_Num(now_speed);
+            return now_speed;
+        }
+        private void Add_Speed_And_Num(double speed)
+        {
+            Avg_Speed_Compute.SPEED += speed;
+            Avg_Speed_Compute.NUM++;
         }
         /// <summary>
         /// 初始化测试参数，包括Test_Error_Num ，Test_Start_Time ，Temp_Nums，Total_Bytes，Once_Bytes，Percent，Block_Bytes
@@ -663,12 +1082,14 @@ namespace DiskTest11
         /// <param name="block_size"></param>
         private void Init_Test_Param(int block_size)
         {
+            Speed_Compute = 0;
+            Avg_Speed_Compute = 0;
             Test_Error_Num = 0;
             Test_Start_Time = Environment.TickCount;
             Temp_Nums = 1;
             Total_Bytes = 0;
             Once_Bytes = 0;
-            Percent = 0;
+            //Percent = 0;
             Block_Bytes = DEAFAUT_BLOCKSIZE * block_size;
         }
         /// <summary>
@@ -691,261 +1112,10 @@ namespace DiskTest11
             Once_Bytes += Block_Bytes;
         }
         /// <summary>
-        /// 顺序读写验证,已修改测速模式，已验证速度无误
+        /// 初始化写入数组
         /// </summary>
-        /// <param name="driver_index">读写流的编号</param>
-        /// <param name="percent">测试所占容量的百分比</param>
-        /// <param name="test_data_mode">测试数据模式</param>
-        /// <param name="block_size">块大小</param>
-        /// <param name="circle">测试循环</param>
-        public void OrderWriteAndVerify(int driver_index, int percent_of_all_size = 100, int test_mode = 0, int block_size=0, int circle = 1)
-        {
-            Test_Driver_List();
-            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
-            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
-            Now_Pos = 0;
-            Init_Test_Param(block_size);
-            CompareArray = new byte[Block_Bytes];
-            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
-            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
-            while (true)
-            {
-                ///添加状态判断语句
-                if (Test_Status == false) resetEvent.WaitOne();                
-                block_size = Compute_Last_Block_Size(block_size);
-                Init_TestArray(block_size, test_mode);
-                Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
-                Test_Error_Num += VerifyArray(TestArray, CompareArray);
-                Test_End_Time = Environment.TickCount;
-                Add_Bytes();               
-                Now_Pos += block_size;
-                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
-                if (Temp_Nums % Fast_INR == 0||Percent==100)
-                {                   
-                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
-                }
-                if (Now_Pos >= Order_Max_Block) break;
-                else
-                { 
-                    Temp_Nums++;
-                    continue; 
-                }
-            }
-            Complete_Information_Print(Test_Error_Num, ORDER_VERTIFY, 0, 0,Order_Max_Block);
-        }
-        /// <summary>
-        /// 顺序只写,已修改测速模式
-        /// </summary>
-        /// <param name="driver_index">读写流的编号</param>
-        /// <param name="percent">测试所占容量的百分比</param>
-        /// <param name="test_data_mode">测试数据模式</param>
-        /// <param name="block_size">块大小</param>
-        /// <param name="circle">测试循环</param>
-        public void OrderOnlyWrite(int driver_index, int percent_of_all_size = 100, int test_mode = 0, int block_size = 1, int circle = 1)
-        {
-            Test_Driver_List();
-            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
-            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
-            Now_Pos = 0;
-            Init_Test_Param(block_size);
-            CompareArray = new byte[Block_Bytes];
-            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
-            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
-            while (true)
-            {
-                ///添加状态判断语句
-                if (Test_Status == false) resetEvent.WaitOne();
-                block_size = Compute_Last_Block_Size(block_size);
-                Init_TestArray(block_size, test_mode);
-                Compute_OnceBlockTime(driver, Now_Pos, block_size, WRITE);
-                Test_End_Time = Environment.TickCount;
-                Add_Bytes();
-                Now_Pos += block_size;
-                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
-                if (Temp_Nums % Fast_INR == 0 || Percent == 100)
-                {
-                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
-                }
-                if (Now_Pos >= Order_Max_Block) break;
-                else
-                {
-                    Temp_Nums++;
-                    continue;
-                }
-            }
-            Complete_Information_Print(Test_Error_Num, ORDER_WRITE, 0, 0, Order_Max_Block);
-        }
-        /// <summary>
-        /// 顺序只读,已修改测速模式
-        /// </summary>
-        /// <param name="driver_index">读写流的编号</param>
-        /// <param name="percent">测试所占容量的百分比</param>
-        /// <param name="test_data_mode">测试数据模式</param>
-        /// <param name="block_size">块大小</param>
-        /// <param name="circle">测试循环</param>
-        public void OrderOnlyRead(int driver_index, int percent_of_all_size = 100, int test_mode = 0, int block_size = 1, int circle = 1)
-        {
-            Test_Driver_List();
-            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
-            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
-            Now_Pos = 0;
-            Init_Test_Param(block_size);
-            CompareArray = new byte[Block_Bytes];
-            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
-            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
-            while (true)
-            {
-                ///添加状态判断语句
-                if (Test_Status == false) resetEvent.WaitOne();
-                block_size = Compute_Last_Block_Size(block_size);
-                Init_TestArray(block_size, test_mode);
-                Compute_OnceBlockTime(driver, Now_Pos, block_size, READ);
-                Test_End_Time = Environment.TickCount;
-                Add_Bytes();
-                Now_Pos += block_size;
-                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
-                if (Temp_Nums % Fast_INR == 0 || Percent == 100)
-                {
-                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
-                }
-                if (Now_Pos >= Order_Max_Block) break;
-                else
-                {
-                    Temp_Nums++;
-                    continue;
-                }
-            }
-            Complete_Information_Print(Test_Error_Num, ORDER_READ, 0, 0, Order_Max_Block);
-        }
-        /// <summary>
-        /// 随机读写验证,针对一次读写在256块以上的,已修改测速模式
-        /// </summary>
-        /// <param name="driver_index">读写IO流的编号</param>
-        /// <param name="test_num">测试次数</param>
-        /// <param name="test_time">测试时间</param>
-        /// <param name="test_mode">测试模式--0代表全0,1代表全1，2随机数</param>
-        public void RandomWriteAndVerify(int driver_index, long test_num = 0, long test_time = 0, int test_mode = 2,int block_size=8192)
-        {
-            Test_Driver_List();
-            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
-            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-            Init_Test_Param(block_size);            
-            CompareArray = new byte[Block_Bytes];
-            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
-            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
-            while (true)
-            {
-                ///添加状态判断语句
-                if (Test_Status == false) resetEvent.WaitOne();
-                Init_TestArray(block_size, test_mode);
-                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
-                Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
-                Test_Error_Num += VerifyArray(TestArray, CompareArray);
-                Test_End_Time = Environment.TickCount;
-                Add_Bytes();
-                if (Temp_Nums%Fast_INR==0)
-                {
-                    Percent = (test_num==0)?(int)(100 * (Test_End_Time - Test_Start_Time) / test_time): (int)(100 * Temp_Nums / test_num);
-                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
-                }
-
-                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
-                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
-                else
-                {
-                    Temp_Nums++; continue;
-                }
-            }
-            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, test_time, 0);
-            else Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, 0, test_num);
-        }
-        /// <summary>
-        /// 随机只读验证
-        /// </summary>
-        /// <param name="driver_index">读写IO流的编号--与硬盘对应</param>
-        /// <param name="test_num">测试次数</param>
-        /// <param name="test_time">测试时间</param>
-        public void RandomOnlyRead(int driver_index, long test_num = 0, long test_time = 0,int block_size=8192)
-        {
-            Test_Driver_List();
-            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
-            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-            Init_Test_Param(block_size);
-            CompareArray = new byte[Block_Bytes];
-            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
-            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
-            while (true)
-            {
-                ///添加状态判断语句
-                if (Test_Status == false) resetEvent.WaitOne();
-                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
-                Compute_OnceBlockTime(driver, Now_Pos, block_size, READ);
-                Test_End_Time = Environment.TickCount;
-                Add_Bytes();
-                if (Temp_Nums % Fast_INR == 0)
-                {
-                    Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
-                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
-                }
-                Temp_Nums++;
-                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
-                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
-                else continue;
-            }
-            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_READ, test_time, 0);
-            else Complete_Information_Print(Test_Error_Num, RANDOM_READ, 0, test_num);
-        }
-        /// <summary>
-        /// 随机只写验证,已修改测速模式
-        /// </summary>
-        /// <param name="driver_index">读写IO流的编号--与硬盘对应</param>
-        /// <param name="test_num">测试次数</param>
-        /// <param name="test_time">测试时间</param>
-        /// <param name="test_mode">测试模式</param>
-        public void RandomOnlyWrite(int driver_index, long test_num = 0, long test_time = 0, int test_mode = 2, int block_size = 8192)
-        {
-            Test_Driver_List();
-            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
-            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-            Init_Test_Param(block_size);
-            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
-            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
-            while (true)
-            {
-                ///添加状态判断语句
-                if (Test_Status == false) resetEvent.WaitOne();
-                Init_TestArray(block_size, test_mode);
-                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
-                Compute_OnceBlockTime(driver, Now_Pos, block_size, WRITE);
-                Test_End_Time = Environment.TickCount;
-                Add_Bytes();
-                if (Temp_Nums % Fast_INR == 0)
-                {
-                    Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
-                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
-                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
-                }
-                Temp_Nums++;
-                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
-                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
-                else continue;
-            }
-            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, test_time, 0);
-            else Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, 0, test_num);
-        }
-        /// <summary>
-        /// 初始化测试数组
-        /// </summary>
-        /// <param name="block_size">测试块大小</param>
-        /// <param name="mode">测试模式</param>
+        /// <param name="block_size"></param>
+        /// <param name="mode"></param>
         public void Init_TestArray(int block_size, int mode)
         {
             if (block_size == 0)
@@ -979,25 +1149,67 @@ namespace DiskTest11
             }
 
         }
+        public byte[] Init_TestArraymulti(int block_size, int mode,byte[] testarray)
+        {
+            if (block_size == 0)
+            {
+                MessageBox.Show("块大小不能为0");
+                return null;
+            }
+            testarray = new byte[block_size];
+            if (mode == 0)
+            {
+                for (int i = 0; i < block_size; i++)
+                {
+                    testarray[i] = 0;
+                }
+                return testarray;
+            }
+            else if (mode == 1)
+            {
+                for (int i = 0; i < block_size; i++)
+                {
+                    testarray[i] = 255;
+                }
+                return testarray;
+            }
+            else if (mode == 2)
+            {
+                Random R = new Random();
+                for (int i = 0; i < block_size; i++)
+                {
+                    testarray[i] = (byte)R.Next(0, 255);
+                }
+                return testarray;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
         /// <summary>
         /// 验证数组中的数据
         /// </summary>
         /// <param name="testarray"></param>
         /// <param name="comparearray"></param>
         /// <returns></returns>
+        /// 
         public int VerifyArray(byte[] testarray, byte[] comparearray)
         {
+            int error_num = 0;
             if (testarray.Length != comparearray.Length)
             {
-                Console.WriteLine("数组长度不匹配！");
-            }
-            int error_num = 0;
+                Console.WriteLine("数组长度不匹配！testarray.length = "+testarray.Length+" comparearray.length = "+comparearray.Length);
+                return ++error_num; 
+            }           
             for (int i = 0; i < testarray.Length; i++)
             {
                 if (testarray[i] != comparearray[i])
                 {
-                    Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss")+"当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
-                    this.PrintLog(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss")+"当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
+                    Console.WriteLine("testarray.length = " + testarray.Length + " comparearray.length = " + comparearray.Length);
+                    Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss") + "当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
+                    this.PrintLog(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss") + "当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
                     error_num++;
                 }
             }
@@ -1040,11 +1252,1258 @@ namespace DiskTest11
                 //Disk_Choose_Information_List[e.RowIndex] = Temp_Choose;
                 panel1.Controls.Clear();
                 panel1.Controls.Add(Ed[e.RowIndex]);
-                now_index_framework = e.RowIndex;
+                Now_Index_Framework = e.RowIndex;
             }
-            catch (Exception ee){
+            catch (Exception ee)
+            {
                 MessageBox.Show("找不到硬盘");
-             }           
-        }       
+            }
+        }
+        /// <summary>
+        /// 初始化测试的开始时间
+        /// </summary>
+        private void Init_Test_Label()
+        {
+            this.PublishNotify(0, 0, 0, DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+            this.PublishAvgSpeed(0);
+        }
+        public void MultiOrderWriteAndVerifyCT(ChooseInformation info)
+        {
+            PublishCircleNum(NOW_CIRCLE + 1);
+            if (!Repeat_Status&&info.Record)
+            {
+                RecordTest recordTest = new RecordTest();
+                recordTest.Order_Record_Mode(ORDER_VERTIFY, info.TestDataMode, info.BlockSize, info.TestPercent, info.ThreadNum,info.TestCircle);
+                recordTest.Finish();
+            }
+            Thread[] threads = new Thread[info.ThreadNum];
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[info.DriverIndex];
+            stopwatches = new Stopwatch[info.ThreadNum];
+            resetEvents = new AutoResetEvent[info.ThreadNum];
+            Percent = 0;
+            TOTAL_TEST = 0;
+            if (NOW_CIRCLE == 0)
+                TOTAL_MB = 0;
+            NOW_SPEED = 0;
+            NOW_SPEED_NUM = 0;
+
+            for (int i=0;i< info.ThreadNum; i++)
+            {
+                threads[i] = new Thread(MultiOrderWriteAndVerify);
+                threads[i].Start(new MultiThreadInfo(driver,info, i));
+            }
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i].Join();
+            }
+            Console.WriteLine("---------------wohoo,all is end!");
+            NOW_CIRCLE++;
+            if (NOW_CIRCLE < info.TestCircle)
+                MultiOrderWriteAndVerifyCT(info);
+        }
+        /// <summary>
+        /// 顺序读写验证,已修改测速模式，已验证速度无误
+        /// </summary>
+        /// <param name="driver_index">读写流的编号</param>
+        /// <param name="percent">测试所占容量的百分比</param>
+        /// <param name="test_data_mode">测试数据模式</param>
+        /// <param name="block_size">块大小</param>
+        /// <param name="circle">测试循环</param>
+        /// <summary>
+        /// 初始化测试数组
+        /// </summary>
+        /// <param name="block_size">测试块大小</param>
+        /// <param name="mode">测试模式</param>
+        public void MultiOrderWriteAndVerify(object o)//int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 0, int circle = 1, int thread_num=1
+        {
+            MultiThreadInfo info = (MultiThreadInfo)o;
+            Test_Driver_List();
+            Init_Test_Label();
+            int BLOCK_SIZE = info.chooseInformation.BlockSize;
+            long total_sector = info.chooseInformation.TestPercent * info.driverLoader.DiskInformation.DiskSectorSize / 100;
+            GapSectorNumble = info.chooseInformation.TestPercent * info.driverLoader.DiskInformation.DiskSectorSize / 100 / info.chooseInformation.ThreadNum;
+            long now_pos = info.threadIndex * GapSectorNumble;
+            long max_pos;
+            if (total_sector % info.chooseInformation.ThreadNum != 0 && info.threadIndex == (info.chooseInformation.ThreadNum - 1))
+            {
+                max_pos = now_pos + GapSectorNumble + (total_sector % info.chooseInformation.ThreadNum);
+            }
+            else
+                max_pos = now_pos + GapSectorNumble;
+            Console.WriteLine("第 " + info.threadIndex + " 个线程的初始位置：" + now_pos+" 的最后位置是："+max_pos);            
+            Init_Test_Param(BLOCK_SIZE);
+            int BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;            
+            Fast_INR = (BLOCK_SIZE >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (BLOCK_SIZE >= 256) ? SMALL_INR : BIG_INR;
+            long total_bytes = 0;
+            long once_bytes = 0;
+            SPEED_COMPUTE speed_compute=0;
+            TOTAL_TEST = 0;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                BLOCK_SIZE =  Compute_Last_Block_Size_multi(BLOCK_SIZE, now_pos,max_pos);
+                BYTE_SIZE= BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+                byte[] comparearray = new byte[BYTE_SIZE];
+                byte[] testarray = new byte[BYTE_SIZE];
+                testarray=Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode,testarray);
+                //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
+                speed_compute.Start_Time = Environment.TickCount;
+                comparearray =Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, VERTIFY,testarray,comparearray);
+                speed_compute.End_Time = Environment.TickCount;
+                speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
+                speed_compute.Total_Time += speed_compute.Once_Time;
+                ErrorNumMutex.WaitOne();
+                Test_Error_Num += VerifyArray(testarray, comparearray);
+                ErrorNumMutex.ReleaseMutex();
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                total_bytes += BYTE_SIZE;
+                once_bytes += BYTE_SIZE;
+                //Console.WriteLine(now_pos+" 第 "+info.threadIndex+" 个线程的位置");
+                now_pos += BLOCK_SIZE;
+                percent_mutex.WaitOne();
+                TOTAL_TEST += BLOCK_SIZE;
+                percent_mutex.ReleaseMutex();
+                Percent = (int)(TOTAL_TEST * 100 / total_sector);
+                if (Temp_Nums % Fast_INR == 0 || now_pos >= max_pos)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || now_pos >= max_pos)
+                    {
+                        Console.Write("Threadid is : " + info.threadIndex+" ");
+                        double speed = Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
+                        this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        once_bytes = 0;
+                        speed_compute.Total_Time = 0;
+                    }
+                }
+                if (now_pos >= max_pos) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Console.WriteLine("当前是第 " + info.threadIndex + " 个线程完成测试！");
+            Complete_Information_Print(Test_Error_Num, ORDER_VERTIFY, 0, 0, max_pos);           
+        }
+        public void OrderWriteAndVertify(int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 1, int circle = 1, int thread_num = 1)
+        {
+            RecordTest recordTest = new RecordTest();
+            recordTest.Order_Record_Mode(ORDER_VERTIFY, data_mode, block_size, percent_of_all_size, thread_num,circle);
+            recordTest.Finish();
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
+            Now_Pos = 0;
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                block_size = Compute_Last_Block_Size(block_size);
+                Init_TestArray(block_size, data_mode);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Now_Pos += block_size;
+                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                if (Now_Pos >= Order_Max_Block) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Complete_Information_Print(Test_Error_Num, ORDER_VERTIFY, 0, 0, Order_Max_Block);
+        }
+        /// <summary>
+        /// 顺序读写验证复现版，无需记录本次测试过程
+        /// </summary>
+        /// <param name="driver_index"></param>
+        /// <param name="percent_of_all_size"></param>
+        /// <param name="data_mode"></param>
+        /// <param name="block_size"></param>
+        /// <param name="circle"></param>
+        public void OrderWriteAndVerify_Repeat(int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 0, int circle = 1)
+        {
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
+            Now_Pos = 0;
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                block_size = Compute_Last_Block_Size(block_size);
+                Init_TestArray(block_size, data_mode);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
+                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Console.WriteLine(Now_Pos);
+                Now_Pos += block_size;
+                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                if (Now_Pos >= Order_Max_Block) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Complete_Information_Print(Test_Error_Num, ORDER_VERTIFY, 0, 0, Order_Max_Block);
+        }
+        public void MultiOrderOnlyWriteCT(ChooseInformation info)
+        {
+            PublishCircleNum(NOW_CIRCLE + 1);
+            if (!Repeat_Status && info.Record)
+            {
+                RecordTest recordTest = new RecordTest();
+                recordTest.Order_Record_Mode(ORDER_WRITE, info.TestDataMode, info.BlockSize, info.TestPercent, info.ThreadNum,info.TestCircle);
+                recordTest.Finish();
+            }
+            Thread[] threads = new Thread[info.ThreadNum];
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[info.DriverIndex];
+            resetEvents = new AutoResetEvent[info.ThreadNum];
+            Percent = 0;
+            TOTAL_TEST = 0;
+            if(NOW_CIRCLE==0)
+                TOTAL_MB = 0;
+            NOW_SPEED = 0;
+            NOW_SPEED_NUM = 0;
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i] = new Thread(MultiOrderOnlyWrite);
+                threads[i].Start(new MultiThreadInfo(driver, info, i));
+                resetEvents[i] = new AutoResetEvent(true);
+            }
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i].Join();
+            }
+            Console.WriteLine("---------------wohoo,all is end!");
+            NOW_CIRCLE++;
+            if (NOW_CIRCLE < info.TestCircle)
+                MultiOrderOnlyWriteCT(info);
+        }
+        public void MultiOrderOnlyWrite(object o)//int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 0, int circle = 1, int thread_num=1
+        {
+            MultiThreadInfo info = (MultiThreadInfo)o;
+            Test_Driver_List();
+            Init_Test_Label();
+            int BLOCK_SIZE = info.chooseInformation.BlockSize;
+            long total_sector = info.chooseInformation.TestPercent * info.driverLoader.DiskInformation.DiskSectorSize / 100;
+            GapSectorNumble = info.chooseInformation.TestPercent * info.driverLoader.DiskInformation.DiskSectorSize / 100 / info.chooseInformation.ThreadNum;
+            long now_pos = info.threadIndex * GapSectorNumble;
+            long max_pos;
+            if (total_sector%info.chooseInformation.ThreadNum!=0&&info.threadIndex== (info.chooseInformation.ThreadNum-1))
+            {
+                max_pos = now_pos + GapSectorNumble+(total_sector % info.chooseInformation.ThreadNum);
+            }
+            else
+                max_pos = now_pos + GapSectorNumble;            
+            Console.WriteLine("第 " + info.threadIndex + " 个线程的初始位置：" + now_pos + " 的最后位置是：" + max_pos);
+            Init_Test_Param(BLOCK_SIZE);
+            int BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+            Fast_INR = (BLOCK_SIZE > 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (BLOCK_SIZE > 256) ? SMALL_INR : BIG_INR;
+            long total_bytes = 0;
+            long once_bytes = 0;
+            SPEED_COMPUTE speed_compute = 0;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false)
+                {
+                    //resetEvent.WaitOne();
+                    resetEvents[info.threadIndex].WaitOne();
+                }
+                BLOCK_SIZE = Compute_Last_Block_Size_multi(BLOCK_SIZE, now_pos, max_pos);
+                BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+                byte[] comparearray = new byte[BYTE_SIZE];
+                byte[] testarray = new byte[BYTE_SIZE];
+                testarray = Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode, testarray);
+                //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
+                speed_compute.Start_Time = Environment.TickCount;
+                Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, WRITE, testarray, comparearray);
+                speed_compute.End_Time = Environment.TickCount;
+                speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
+                speed_compute.Total_Time += speed_compute.Once_Time;
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                total_bytes += BYTE_SIZE;
+                once_bytes += BYTE_SIZE;
+                //Console.WriteLine(now_pos+" 第 "+info.threadIndex+" 个线程的位置");
+                now_pos += BLOCK_SIZE;
+                percent_mutex.WaitOne();
+                TOTAL_TEST += BLOCK_SIZE;
+                percent_mutex.ReleaseMutex();
+                Percent = (int)(TOTAL_TEST * 100 / total_sector);               
+                if (Percent == 99)
+                    Console.WriteLine("TOTAL_TEST is "+TOTAL_TEST+" total_sector is "+total_sector);
+                if (Temp_Nums % Fast_INR == 0 || now_pos >= max_pos)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || now_pos >= max_pos)
+                    {
+                        Console.Write("Threadid is : " + info.threadIndex + " now_pos:"+now_pos);
+                        double speed=Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
+                        this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        once_bytes = 0;
+                        speed_compute.Total_Time = 0;
+                    }
+                }
+                if (now_pos >= max_pos) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Console.WriteLine("当前是第 " + info.threadIndex + " 个线程完成测试！");
+            Complete_Information_Print(Test_Error_Num, ORDER_WRITE, 0, 0, max_pos);
+        }
+        /// <summary>
+        /// 顺序只写,已修改测速模式
+        /// </summary>
+        /// <param name="driver_index">读写流的编号</param>
+        /// <param name="percent">测试所占容量的百分比</param>
+        /// <param name="test_data_mode">测试数据模式</param>
+        /// <param name="block_size">块大小</param>
+        /// <param name="circle">测试循环</param>
+        public void OrderOnlyWrite(int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 1, int circle = 1,int thread_num=1)
+        {
+            RecordTest recordTest = new RecordTest();
+            recordTest.Order_Record_Mode(ORDER_WRITE, data_mode, block_size, percent_of_all_size,thread_num,circle);
+            recordTest.Finish();
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
+            Now_Pos = 0;
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                block_size = Compute_Last_Block_Size(block_size);
+                Init_TestArray(block_size, data_mode);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, WRITE);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Now_Pos += block_size;
+                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) 
+                        Compute_OnceBlockSpeed();
+                }
+                if (Now_Pos >= Order_Max_Block) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Complete_Information_Print(Test_Error_Num, ORDER_WRITE, 0, 0, Order_Max_Block);
+        }
+        /// <summary>
+        /// 顺序只写复现版，无需记录本次测试过程
+        /// </summary>
+        /// <param name="driver_index"></param>
+        /// <param name="percent_of_all_size"></param>
+        /// <param name="test_mode"></param>
+        /// <param name="block_size"></param>
+        /// <param name="circle"></param>
+        public void OrderOnlyWrite_Repeat(int driver_index, int percent_of_all_size = 100, int test_mode = 0, int block_size = 1, int circle = 1)
+        {
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
+            Now_Pos = 0;
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                block_size = Compute_Last_Block_Size(block_size);
+                Init_TestArray(block_size, test_mode);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, WRITE);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Now_Pos += block_size;
+                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                if (Now_Pos >= Order_Max_Block) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Complete_Information_Print(Test_Error_Num, ORDER_WRITE, 0, 0, Order_Max_Block);
+        }
+        private delegate void TestDelegate(ChooseInformation choose);
+        public void MultiOrderOnlyReadCT(ChooseInformation info)
+        {
+            PublishCircleNum(NOW_CIRCLE+1);
+            if (!Repeat_Status && info.Record)
+            {
+                RecordTest recordTest = new RecordTest();
+                recordTest.Order_Record_Mode(ORDER_READ, info.TestDataMode, info.BlockSize, info.TestPercent, info.ThreadNum,info.TestCircle);
+                recordTest.Finish();
+            }
+            Thread[] threads = new Thread[info.ThreadNum];
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[info.DriverIndex];
+            stopwatches = new Stopwatch[info.ThreadNum];
+            resetEvents = new AutoResetEvent[info.ThreadNum];
+            Percent = 0;
+            TOTAL_TEST = 0;
+            if (NOW_CIRCLE == 0)
+                TOTAL_MB = 0;
+            NOW_SPEED = 0;
+            NOW_SPEED_NUM = 0;
+            
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i] = new Thread(MultiOrderOnlyRead);
+                threads[i].Start(new MultiThreadInfo(driver, info, i));
+                
+                resetEvents[i] = new AutoResetEvent(true);
+                stopwatches[i] = new Stopwatch();
+            }
+            for (int i=0;i<info.ThreadNum;i++)
+            {
+                threads[i].Join();
+            }
+            Console.WriteLine("---------------wohoo,all is end!");
+            NOW_CIRCLE++;
+            if (NOW_CIRCLE < info.TestCircle)
+                MultiOrderOnlyReadCT(info);
+        }
+        public void MultiOrderOnlyRead(object o)
+        {
+            MultiThreadInfo info = (MultiThreadInfo)o;
+            Test_Driver_List();
+            Init_Test_Label();
+            int BLOCK_SIZE = info.chooseInformation.BlockSize;
+            long total_sector = info.chooseInformation.TestPercent * info.driverLoader.DiskInformation.DiskSectorSize / 100;
+            GapSectorNumble = info.chooseInformation.TestPercent * info.driverLoader.DiskInformation.DiskSectorSize / 100 / info.chooseInformation.ThreadNum;
+            long now_pos = info.threadIndex * GapSectorNumble;
+            long max_pos;
+            if (total_sector % info.chooseInformation.ThreadNum != 0 && info.threadIndex == (info.chooseInformation.ThreadNum - 1))
+            {
+                max_pos = now_pos + GapSectorNumble + (total_sector % info.chooseInformation.ThreadNum);
+            }
+            else
+                max_pos = now_pos + GapSectorNumble;
+            Console.WriteLine("第 " + info.threadIndex + " 个线程的初始位置：" + now_pos + " 的最后位置是：" + max_pos);
+            Init_Test_Param(BLOCK_SIZE);
+            int BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+            Fast_INR = (BLOCK_SIZE >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (BLOCK_SIZE >= 256) ? MIDDLE_INR : BIG_INR;
+            long total_bytes = 0;
+            long once_bytes = 0;
+            SPEED_COMPUTE speed_compute = 0;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false)
+                {
+                    //resetEvent.WaitOne();
+                    resetEvents[info.threadIndex].WaitOne();
+                }
+                BLOCK_SIZE = Compute_Last_Block_Size_multi(BLOCK_SIZE, now_pos, max_pos);
+                BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+                byte[] comparearray = new byte[BYTE_SIZE];
+                byte[] testarray = new byte[BYTE_SIZE];
+                testarray = Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode, testarray);
+                //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
+                speed_compute.Start_Time = Environment.TickCount;
+                comparearray=Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, READ, testarray, comparearray);
+                speed_compute.End_Time = Environment.TickCount;
+                speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
+                speed_compute.Total_Time += speed_compute.Once_Time;
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                total_bytes += BYTE_SIZE;
+                once_bytes += BYTE_SIZE;
+                //Console.WriteLine(now_pos+" 第 "+info.threadIndex+" 个线程的位置");
+                now_pos += BLOCK_SIZE;
+                percent_mutex.WaitOne();
+                TOTAL_TEST += BLOCK_SIZE;
+                percent_mutex.ReleaseMutex();
+                Percent = (int)(TOTAL_TEST * 100 / total_sector);
+                if (Temp_Nums % Fast_INR == 0 || now_pos >= max_pos)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || now_pos >= max_pos)
+                    {
+                        Console.Write("Threadid is : " + info.threadIndex + " now_pos: "+now_pos);
+                        double speed = Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
+                        this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        once_bytes = 0;
+                        speed_compute.Total_Time = 0;
+                    }
+                }
+                if (now_pos >= max_pos) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Console.WriteLine("当前是第 " + info.threadIndex + " 个线程完成测试！");
+            Complete_Information_Print(Test_Error_Num, ORDER_READ, 0, 0, max_pos);
+        }
+        /// <summary>
+        /// 顺序只读,已修改测速模式
+        /// </summary>
+        /// <param name="driver_index">读写流的编号</param>
+        /// <param name="percent">测试所占容量的百分比</param>
+        /// <param name="test_data_mode">测试数据模式</param>
+        /// <param name="block_size">块大小</param>
+        /// <param name="circle">测试循环</param>
+        public void OrderOnlyRead(int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 1, int circle = 1,int thread_num=1)
+        {
+            RecordTest recordTest = new RecordTest();
+            recordTest.Order_Record_Mode(ORDER_READ, data_mode, block_size, percent_of_all_size,thread_num,circle);
+            recordTest.Finish();
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
+            Now_Pos = 0;
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                block_size = Compute_Last_Block_Size(block_size);
+                Init_TestArray(block_size, data_mode);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, READ);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Now_Pos += block_size;
+                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
+                if (Temp_Nums % Fast_INR == 0 || Percent == 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                if (Now_Pos >= Order_Max_Block) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Complete_Information_Print(Test_Error_Num, ORDER_READ, 0, 0, Order_Max_Block);
+        }
+        /// <summary>
+        /// 顺序只读复现版，无需记录本次测试过程
+        /// </summary>
+        /// <param name="driver_index"></param>
+        /// <param name="percent_of_all_size"></param>
+        /// <param name="data_mode"></param>
+        /// <param name="block_size"></param>
+        /// <param name="circle"></param>
+        public void OrderOnlyRead_Repeat(int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 1, int circle = 1)
+        {
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Order_Max_Block = percent_of_all_size * driver.DiskInformation.DiskSectorSize / 100;
+            Now_Pos = 0;
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                block_size = Compute_Last_Block_Size(block_size);
+                Init_TestArray(block_size, data_mode);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, READ);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Now_Pos += block_size;
+                Percent = (int)(Now_Pos * 100 / Order_Max_Block);
+                if (Temp_Nums % Fast_INR == 0 || Percent == 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                if (Now_Pos >= Order_Max_Block) break;
+                else
+                {
+                    Temp_Nums++;
+                    continue;
+                }
+            }
+            Complete_Information_Print(Test_Error_Num, ORDER_READ, 0, 0, Order_Max_Block);
+        }
+        public void MultiRandomWriteAndVerifyCT(ChooseInformation info)
+        {
+            if (!Repeat_Status && info.Record)
+            {
+                RecordTest recordTest = new RecordTest();
+                recordTest.Random_Record_Mode(RANDOM_VERTIFY, info.TestDataMode, info.BlockSize, info.TestTime, info.TestNum, info.ThreadNum);
+                recordTest.Finish();
+            }
+            Thread[] threads = new Thread[info.ThreadNum];
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[info.DriverIndex];
+            resetEvents = new AutoResetEvent[info.ThreadNum];
+            Percent = 0;
+            TOTAL_TEST = 0;
+            TOTAL_MB = 0;
+            NOW_SPEED = 0;
+            NOW_SPEED_NUM = 0;
+            Console.WriteLine("当前块大小是： " + info.BlockSize);
+            Time_StopWatch.Start();
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i] = new Thread(MultiRandomWriteAndVerify);
+                threads[i].Start(new MultiThreadInfo(driver, info, i));
+                resetEvents[i] = new AutoResetEvent(true);
+            }
+        }
+        public void MultiRandomWriteAndVerify(object o)
+        {
+            MultiThreadInfo info = (MultiThreadInfo)o;
+            Test_Driver_List();
+            Init_Test_Label();
+            int BLOCK_SIZE = info.chooseInformation.BlockSize;
+            //Console.WriteLine("当前块大小是： " +BLOCK_SIZE);
+            long total_sector = info.driverLoader.DiskInformation.DiskSectorSize;
+            GapSectorNumble = total_sector / info.chooseInformation.ThreadNum;
+            long left_pos = info.threadIndex * GapSectorNumble;
+            long right_pos;
+            long now_pos;
+            if (total_sector % info.chooseInformation.ThreadNum != 0 && info.threadIndex == (info.chooseInformation.ThreadNum - 1))
+            {
+                right_pos = left_pos + GapSectorNumble + (total_sector % info.chooseInformation.ThreadNum);
+            }
+            else
+                right_pos = left_pos + GapSectorNumble;
+            Console.WriteLine("第 " + info.threadIndex + " 个线程的初始位置：" + left_pos + " 的最后位置是：" + right_pos);
+            Init_Test_Param(BLOCK_SIZE);
+            int BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+            Fast_INR = (BLOCK_SIZE >= 256) ? SMALL_INR : SMALL_INR;
+            Slow_INR = (BLOCK_SIZE >= 256) ? SMALL_INR : SMALL_INR;
+            long total_bytes = 0;
+            long once_bytes = 0;
+            SPEED_COMPUTE speed_compute = 0;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false)
+                {
+                    //resetEvent.WaitOne();
+                    Gap_End_Time = Environment.TickCount;                    
+                    resetEvents[info.threadIndex].WaitOne();
+                    if (Time_StopWatch.IsRunning)
+                        Time_StopWatch.Stop();
+                }
+                now_pos = NextLong(left_pos, right_pos - BLOCK_SIZE);
+                Console.Write("Threadid is : " + info.threadIndex+ "now_pos: " + now_pos + " ");
+                //BLOCK_SIZE = Compute_Last_Block_Size_multi(BLOCK_SIZE, left_pos, right_pos);
+                //BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+                byte[] comparearray = new byte[BYTE_SIZE];
+                byte[] testarray = new byte[BYTE_SIZE];
+                testarray = Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode, testarray);
+                //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
+                speed_compute.Start_Time = Environment.TickCount;
+                comparearray=Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, VERTIFY, testarray, comparearray);
+                ErrorNumMutex.WaitOne();
+                Test_Error_Num += VerifyArray(testarray, comparearray);
+                ErrorNumMutex.ReleaseMutex();
+                speed_compute.End_Time = Environment.TickCount;
+                speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
+                speed_compute.Total_Time += speed_compute.Once_Time;
+                TimeMutex.WaitOne();
+                Test_End_Time = Environment.TickCount;
+                TimeMutex.ReleaseMutex();
+                Add_Bytes();
+                total_bytes += BYTE_SIZE;
+                once_bytes += BYTE_SIZE;
+                Console.WriteLine(now_pos+" 第 "+info.threadIndex+" 个线程的位置");
+                //left_pos += BLOCK_SIZE;
+                percent_mutex.WaitOne();
+                TOTAL_TEST += BLOCK_SIZE;
+                percent_mutex.ReleaseMutex();
+                Time_StopWatch.Stop();
+                Percent = (info.chooseInformation.TestNum == 0) ? (int)(100 * (Time_StopWatch.ElapsedMilliseconds) / info.chooseInformation.TestTime) : (int)(100 * Temp_Nums / info.chooseInformation.TestNum);
+                Time_StopWatch.Start();
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    //if (Temp_Nums % Slow_INR == 0 || Percent >= 100)
+                    //{
+                        Console.Write("Threadid is : " + info.threadIndex + " now_pos:" + left_pos);
+                        Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
+                        this.PublishWrittenAndSpeed(NOW_SPEED / NOW_SPEED_NUM, TOTAL_MB);
+                        once_bytes = 0;
+                        speed_compute.Total_Time = 0;
+                    //}
+                }
+                Time_StopWatch.Stop();
+                if ((info.chooseInformation.TestNum == 0) && (Time_StopWatch.ElapsedMilliseconds >= info.chooseInformation.TestTime || Percent > 100)) break;
+                else if ((info.chooseInformation.TestTime == 0) && (Temp_Nums > info.chooseInformation.TestNum || Percent >= 100)) break;
+                else
+                {
+                    RandomTestMutex.WaitOne();
+                    Temp_Nums++;
+                    RandomTestMutex.ReleaseMutex();
+                    Time_StopWatch.Start();
+                    continue;
+                }
+            }
+            if (info.chooseInformation.TestNum == 0) Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, info.chooseInformation.TestTime, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, 0, info.chooseInformation.TestNum);
+            Console.WriteLine("当前是第 " + info.threadIndex + " 个线程完成测试！");
+            //Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, 0, 0, right_pos);
+        }
+        /// <summary>
+        /// 随机读写验证,针对一次读写在256块以上的,已添加记录函数
+        /// </summary>
+        /// <param name="driver_index">读写IO流的编号</param>
+        /// <param name="test_num">测试次数</param>
+        /// <param name="test_time">测试时间</param>
+        /// <param name="test_mode">测试模式--0代表全0,1代表全1，2随机数</param>               
+        public void RandomWriteAndVerify(int driver_index, long test_num = 0, long test_time = 0, int test_data_mode = 2, int block_size = 8192,int thread_num=1)
+        {
+            RecordTest recordTest = new RecordTest();
+            recordTest.Random_Record_Mode(RANDOM_VERTIFY, test_data_mode, block_size, test_time, test_num,thread_num);
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                Init_TestArray(block_size, test_data_mode);
+                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
+                recordTest.Random_Record_Sector(Now_Pos);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
+                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+
+                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
+                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
+                else
+                {
+                    Temp_Nums++; continue;
+                }
+            }
+            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, test_time, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, 0, test_num);
+            recordTest.Finish();
+        }
+        /// <summary>
+        /// 随机读写验证复现版，无需记录上次测试结果
+        /// </summary>
+        /// <param name="driver_index"></param>
+        /// <param name="test_num"></param>
+        /// <param name="test_time"></param>
+        /// <param name="test_data_mode"></param>
+        /// <param name="block_size"></param>
+        public void RandomWriteAndVerify_Repeat(int driver_index, long test_num = 0, long test_time = 0, int test_data_mode = 2, int block_size = 8192)
+        {
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            ReadRecord readRecord = new ReadRecord();
+            for (int i = 0; i < 4; i++) readRecord.Read_Block_Size();
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                Init_TestArray(block_size, test_data_mode);
+                Now_Pos = readRecord.Read_Sector();
+                //Console.WriteLine(Now_Pos);
+                //recordTest.Random_Record_Sector(Now_Pos);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
+                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+
+                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
+                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
+                else
+                {
+                    Temp_Nums++; continue;
+                }
+            }
+            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, test_time, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, 0, test_num);
+            readRecord.Finish();
+            //recordTest.Finish();
+        }
+        public void MultiRandomOnlyWriteCT(ChooseInformation info)
+        {
+            if (!Repeat_Status && info.Record)
+            {
+                RecordTest recordTest = new RecordTest();
+                recordTest.Random_Record_Mode(RANDOM_WRITE, info.TestDataMode, info.BlockSize, info.TestTime, info.TestNum, info.ThreadNum);
+                recordTest.Finish();
+            }
+            Thread[] threads = new Thread[info.ThreadNum];
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[info.DriverIndex];
+            resetEvents = new AutoResetEvent[info.ThreadNum];
+            Percent = 0;
+            TOTAL_TEST = 0;
+            TOTAL_MB = 0;
+            NOW_SPEED = 0;
+            NOW_SPEED_NUM = 0;
+            Time_StopWatch.Start();
+            Console.WriteLine("当前块大小是： " + info.BlockSize);
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i] = new Thread(MultiRandomOnlyWrite);
+                threads[i].Start(new MultiThreadInfo(driver, info, i));
+                resetEvents[i] = new AutoResetEvent(true);
+            }
+        }
+        public void MultiRandomOnlyWrite(object o)
+        {
+            MultiThreadInfo info = (MultiThreadInfo)o;
+            Test_Driver_List();
+            Init_Test_Label();
+            int BLOCK_SIZE = info.chooseInformation.BlockSize;
+            //Console.WriteLine("当前块大小是： " +BLOCK_SIZE);
+            long total_sector = info.driverLoader.DiskInformation.DiskSectorSize;
+            GapSectorNumble = total_sector / info.chooseInformation.ThreadNum;
+            long left_pos = info.threadIndex * GapSectorNumble;
+            long right_pos;
+            long now_pos;
+            if (total_sector % info.chooseInformation.ThreadNum != 0 && info.threadIndex == (info.chooseInformation.ThreadNum - 1))
+            {
+                right_pos = left_pos + GapSectorNumble + (total_sector % info.chooseInformation.ThreadNum);
+            }
+            else
+                right_pos = left_pos + GapSectorNumble;
+            Console.WriteLine("第 " + info.threadIndex + " 个线程的初始位置：" + left_pos + " 的最后位置是：" + right_pos);
+            Init_Test_Param(BLOCK_SIZE);
+            int BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+            Fast_INR = (BLOCK_SIZE >= 16) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (BLOCK_SIZE >= 16) ? MIDDLE_INR : BIG_INR;
+            long total_bytes = 0;
+            long once_bytes = 0;
+            SPEED_COMPUTE speed_compute = 0;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false)
+                {
+                    //resetEvent.WaitOne();
+                    Gap_End_Time = Environment.TickCount;
+                    resetEvents[info.threadIndex].WaitOne();
+                    if (Time_StopWatch.IsRunning)
+                        Time_StopWatch.Stop();
+                }
+                now_pos = NextLong(left_pos, right_pos - BLOCK_SIZE);
+                Console.Write("Threadid is : " + info.threadIndex+ "now_pos: " + now_pos + " ");
+                //BLOCK_SIZE = Compute_Last_Block_Size_multi(BLOCK_SIZE, left_pos, right_pos);
+                //BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+                byte[] comparearray = new byte[BYTE_SIZE];
+                byte[] testarray = new byte[BYTE_SIZE];
+                testarray = Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode, testarray);
+                //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
+                speed_compute.Start_Time = Environment.TickCount;
+                Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, WRITE, testarray, comparearray);
+                speed_compute.End_Time = Environment.TickCount;
+                speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
+                speed_compute.Total_Time += speed_compute.Once_Time;
+                TimeMutex.WaitOne();
+                Test_End_Time = Environment.TickCount;
+                TimeMutex.ReleaseMutex();
+                Add_Bytes();
+                total_bytes += BYTE_SIZE;
+                once_bytes += BYTE_SIZE;
+                Console.WriteLine(now_pos+" 第 "+info.threadIndex+" 个线程的位置");
+                //left_pos += BLOCK_SIZE;
+                percent_mutex.WaitOne();
+                TOTAL_TEST += BLOCK_SIZE;
+                percent_mutex.ReleaseMutex();
+                Time_StopWatch.Stop();
+                Percent = (info.chooseInformation.TestNum == 0) ? (int)(100 * (Time_StopWatch.ElapsedMilliseconds) / info.chooseInformation.TestTime) : (int)(100 * Temp_Nums / info.chooseInformation.TestNum);
+                Time_StopWatch.Start();
+                //Console.WriteLine("num: " + Temp_Nums);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    //if (Temp_Nums % Slow_INR == 0 || Percent >= 100)
+                    //{
+                        Console.Write("Threadid is : " + info.threadIndex + " now_pos:" + left_pos);
+                        double speed=Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
+                        this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        once_bytes = 0;
+                        speed_compute.Total_Time = 0;
+                    //}
+                }
+
+                Time_StopWatch.Stop();
+                if ((info.chooseInformation.TestNum == 0) && (Time_StopWatch.ElapsedMilliseconds >= info.chooseInformation.TestTime || Percent > 100)) break;
+                else if ((info.chooseInformation.TestTime == 0) && (Temp_Nums > info.chooseInformation.TestNum || Percent >= 100)) break;
+                else
+                {
+                    RandomTestMutex.WaitOne();
+                    Temp_Nums++;
+                    RandomTestMutex.ReleaseMutex();
+                    Time_StopWatch.Start();
+                    continue;
+                }
+            }
+            if (info.chooseInformation.TestNum == 0) Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, info.chooseInformation.TestTime, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, 0, info.chooseInformation.TestNum);
+            Console.WriteLine("当前是第 " + info.threadIndex + " 个线程完成测试！");
+            //Complete_Information_Print(Test_Error_Num, RANDOM_VERTIFY, 0, 0, right_pos);
+        }
+        public void MultiRandomOnlyReadCT(ChooseInformation info)
+        {
+            if (!Repeat_Status && info.Record)
+            {
+                RecordTest recordTest = new RecordTest();
+                recordTest.Random_Record_Mode(RANDOM_READ, info.TestDataMode, info.BlockSize, info.TestTime, info.TestNum, info.ThreadNum);
+                recordTest.Finish();
+            }
+            Thread[] threads = new Thread[info.ThreadNum];
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[info.DriverIndex];
+            resetEvents = new AutoResetEvent[info.ThreadNum];
+            Percent = 0;
+            TOTAL_TEST = 0;
+            TOTAL_MB = 0;
+            NOW_SPEED = 0;
+            NOW_SPEED_NUM = 0;
+            Console.WriteLine("当前块大小是： " + info.BlockSize);
+            Time_StopWatch.Start();
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i] = new Thread(MultiRandomOnlyRead);
+                threads[i].Start(new MultiThreadInfo(driver, info, i));
+                resetEvents[i] = new AutoResetEvent(true);
+            }
+        }
+        public void MultiRandomOnlyRead(object o)
+        {
+            MultiThreadInfo info = (MultiThreadInfo)o;
+            Test_Driver_List();
+            Init_Test_Label();
+            int BLOCK_SIZE = info.chooseInformation.BlockSize;
+            //Console.WriteLine("当前块大小是： " +BLOCK_SIZE);
+            long total_sector = info.driverLoader.DiskInformation.DiskSectorSize;
+            GapSectorNumble = total_sector / info.chooseInformation.ThreadNum;
+            long left_pos = info.threadIndex * GapSectorNumble;
+            long right_pos;
+            long now_pos;
+            if (total_sector % info.chooseInformation.ThreadNum != 0 && info.threadIndex == (info.chooseInformation.ThreadNum - 1))
+            {
+                right_pos = left_pos + GapSectorNumble + (total_sector % info.chooseInformation.ThreadNum);
+            }
+            else
+                right_pos = left_pos + GapSectorNumble;
+            Console.WriteLine("第 " + info.threadIndex + " 个线程的初始位置：" + left_pos + " 的最后位置是：" + right_pos);
+            Init_Test_Param(BLOCK_SIZE);
+            int BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+            Fast_INR = (BLOCK_SIZE >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (BLOCK_SIZE >= 256) ? MIDDLE_INR : BIG_INR;
+            long total_bytes = 0;
+            long once_bytes = 0;
+            SPEED_COMPUTE speed_compute = 0;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false)
+                {
+                    //resetEvent.WaitOne();
+                    Gap_End_Time = Environment.TickCount;
+                    if (Time_StopWatch.IsRunning)
+                        Time_StopWatch.Stop();
+                    resetEvents[info.threadIndex].WaitOne();                   
+                }
+                now_pos = NextLong(left_pos, right_pos - BLOCK_SIZE);
+                Console.Write("Threadid is : " + info.threadIndex+ "now_pos: " + now_pos + " ");
+                //BLOCK_SIZE = Compute_Last_Block_Size_multi(BLOCK_SIZE, left_pos, right_pos);
+                //BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
+                byte[] comparearray = new byte[BYTE_SIZE];
+                byte[] testarray = new byte[BYTE_SIZE];
+                //testarray = Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode, testarray);
+                //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
+                speed_compute.Start_Time = Environment.TickCount;
+                comparearray=Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, READ, testarray, comparearray);
+                speed_compute.End_Time = Environment.TickCount;
+                speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
+                speed_compute.Total_Time += speed_compute.Once_Time;
+                TimeMutex.WaitOne();
+                Test_End_Time = Environment.TickCount;
+                TimeMutex.ReleaseMutex();
+                Add_Bytes();
+                total_bytes += BYTE_SIZE;
+                once_bytes += BYTE_SIZE;
+                //Console.WriteLine(now_pos+" 第 "+info.threadIndex+" 个线程的位置");
+                //left_pos += BLOCK_SIZE;
+                percent_mutex.WaitOne();
+                TOTAL_TEST += BLOCK_SIZE;
+                percent_mutex.ReleaseMutex();
+                Time_StopWatch.Stop();
+                Percent = (info.chooseInformation.TestNum == 0) ? (int)(100 * (Time_StopWatch.ElapsedMilliseconds) / info.chooseInformation.TestTime) : (int)(100 * Temp_Nums / info.chooseInformation.TestNum);
+                Time_StopWatch.Start();
+                //Console.WriteLine("num: " + Temp_Nums);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100)
+                    {
+                        Console.Write("Threadid is : " + info.threadIndex + " now_pos:" + now_pos);
+                        double speed=Compute_OnceBlockSpeed_multi(speed_compute, total_bytes, once_bytes);
+                        this.PublishWrittenAndSpeed(speed, TOTAL_MB);
+                        once_bytes = 0;
+                        speed_compute.Total_Time = 0;
+                    }
+                }
+                Time_StopWatch.Stop();
+                if ((info.chooseInformation.TestNum == 0) && (Time_StopWatch.ElapsedMilliseconds >= info.chooseInformation.TestTime || Percent > 100)) break;
+                else if ((info.chooseInformation.TestTime == 0) && (Temp_Nums > info.chooseInformation.TestNum || Percent >= 100)) break;
+                else
+                {
+                    RandomTestMutex.WaitOne();
+                    Temp_Nums++;
+                    RandomTestMutex.ReleaseMutex();
+                    Time_StopWatch.Start();
+                    continue;
+                }
+            }
+            if (info.chooseInformation.TestNum == 0) Complete_Information_Print(Test_Error_Num, RANDOM_READ, info.chooseInformation.TestTime, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_READ, 0, info.chooseInformation.TestNum);
+            Console.WriteLine("当前是第 " + info.threadIndex + " 个线程完成测试！");
+        }
+        /// <summary>
+        /// 随机只读验证
+        /// </summary>
+        /// <param name="driver_index">读写IO流的编号--与硬盘对应</param>
+        /// <param name="test_num">测试次数</param>
+        /// <param name="test_time">测试时间</param>
+        public void RandomOnlyRead(int driver_index, long test_num = 0, long test_time = 0, int block_size = 8192,int thread_num=1)
+        {
+            RecordTest recordTest = new RecordTest();
+            recordTest.Random_Record_Mode(RANDOM_READ, 0, block_size, test_time, test_num,thread_num);
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
+                recordTest.Random_Record_Sector(Now_Pos);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, READ);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                Temp_Nums++;
+                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
+                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
+                else continue;
+            }
+            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_READ, test_time, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_READ, 0, test_num);
+            recordTest.Finish();
+        }
+        /// <summary>
+        /// 随机只读复现版，无需记录本次测试过程
+        /// </summary>
+        /// <param name="driver_index"></param>
+        /// <param name="test_num"></param>
+        /// <param name="test_time"></param>
+        /// <param name="block_size"></param>
+        public void RandomOnlyRead_Repeat(int driver_index, long test_num = 0, long test_time = 0, int block_size = 8192)
+        {
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Init_Test_Param(block_size);
+            CompareArray = new byte[Block_Bytes];
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, READ);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                Temp_Nums++;
+                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
+                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
+                else continue;
+            }
+            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_READ, test_time, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_READ, 0, test_num);
+        }
+        /// <summary>
+        /// 随机只写验证,已修改测速模式
+        /// </summary>
+        /// <param name="driver_index">读写IO流的编号--与硬盘对应</param>
+        /// <param name="test_num">测试次数</param>
+        /// <param name="test_time">测试时间</param>
+        /// <param name="data_mode">测试模式</param>
+        public void RandomOnlyWrite(int driver_index, long test_num = 0, long test_time = 0, int data_mode = 2, int block_size = 8192, int thread_num = 1)
+        {
+            RecordTest recordTest = new RecordTest();
+            recordTest.Random_Record_Mode(RANDOM_WRITE, 0, block_size, test_time, test_num,thread_num);
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Init_Test_Param(block_size);
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                Init_TestArray(block_size, data_mode);
+                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
+                recordTest.Random_Record_Sector(Now_Pos);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, WRITE);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                Temp_Nums++;
+                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
+                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
+                else continue;
+            }
+            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, test_time, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, 0, test_num);
+            recordTest.Finish();
+        }
+        public void RandomOnlyWrite_Repeat(int driver_index, long test_num = 0, long test_time = 0, int data_mode = 2, int block_size = 8192)
+        {
+            Test_Driver_List();
+            DriverLoader driver = (DriverLoader)Disk_Driver_List[driver_index];
+            Init_Test_Label();
+            Init_Test_Param(block_size);
+            Fast_INR = (block_size >= 256) ? SMALL_INR : MIDDLE_INR;
+            Slow_INR = (block_size >= 256) ? MIDDLE_INR : BIG_INR;
+            while (true)
+            {
+                ///添加状态判断语句
+                if (Test_Status == false) resetEvent.WaitOne();
+                Init_TestArray(block_size, data_mode);
+                Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
+                Compute_OnceBlockTime(driver, Now_Pos, block_size, WRITE);
+                Test_End_Time = Environment.TickCount;
+                Add_Bytes();
+                Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
+                if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
+                {
+                    this.PublishProcessAndTime((int)(Percent), DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+                    if (Temp_Nums % Slow_INR == 0 || Percent >= 100) Compute_OnceBlockSpeed();
+                }
+                Temp_Nums++;
+                if ((test_num == 0) && (Test_End_Time - Test_Start_Time >= test_time || Percent > 100)) break;
+                else if ((test_time == 0) && (Temp_Nums > test_num || Percent >= 100)) break;
+                else continue;
+            }
+            if (test_num == 0) Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, test_time, 0);
+            else Complete_Information_Print(Test_Error_Num, RANDOM_WRITE, 0, test_num);
+        }
+
+        private void Reflesh_Button_Click(object sender, EventArgs e)
+        {
+            //InitializeComponent();
+            Init_Disk_Information();
+            Init_Disk_Framework();
+            Init_Choose_And_Repeat_Status_ArrayList();
+            Init_Disk_Setting_Param();
+            
+            Show_Disk();
+            for (int i = 0; i < Disk_Information_List.Count; i++)
+            {
+                Ed[i].TransfChooseINF += Get_Transf_Choose_INF_Event;
+                Ed[i].TransfRepeatTest += Get_Repeat_Test_Status_Event;
+            }
+        }
     }
 }

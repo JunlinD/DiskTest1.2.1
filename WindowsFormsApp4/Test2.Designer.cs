@@ -39,20 +39,25 @@ namespace DiskTest11
             this.uiLabel12 = new Sunny.UI.UILabel();
             this.StopButton = new Sunny.UI.UIButton();
             this.uiFlowLayoutPanel1 = new Sunny.UI.UIFlowLayoutPanel();
-            this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
-            this.uiLabel1 = new Sunny.UI.UILabel();
-            this.uiLabel11 = new Sunny.UI.UILabel();
-            this.uiProcessBar1 = new Sunny.UI.UIProcessBar();
+            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this.userCurve1 = new HslCommunication.Controls.UserCurve();
+            this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.Now_Speed_Show_Label = new Sunny.UI.UILabel();
             this.uiLabel9 = new Sunny.UI.UILabel();
-            this.uiLabel3 = new Sunny.UI.UILabel();
-            this.uiLabel4 = new Sunny.UI.UILabel();
-            this.Written_MB_Show_Label = new Sunny.UI.UILabel();
+            this.AVG_Speed_Text = new Sunny.UI.UILabel();
+            this.AVG_Speed_Show_Label = new Sunny.UI.UILabel();
             this.uiLabel5 = new Sunny.UI.UILabel();
+            this.Written_MB_Show_Label = new Sunny.UI.UILabel();
+            this.uiProcessBar1 = new Sunny.UI.UIProcessBar();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.Circle_Num_Label = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.uiFlowLayoutPanel1.SuspendLayout();
-            this.uiGroupBox1.SuspendLayout();
+            this.tableLayoutPanel4.SuspendLayout();
+            this.tableLayoutPanel3.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -163,20 +168,19 @@ namespace DiskTest11
             this.StopButton.MinimumSize = new System.Drawing.Size(1, 1);
             this.StopButton.Name = "StopButton";
             this.StopButton.Radius = 50;
-            this.StopButton.RectHoverColor = System.Drawing.Color.Red;
-            this.StopButton.RectPressColor = System.Drawing.Color.Red;
-            this.StopButton.RectSelectedColor = System.Drawing.Color.Red;
             this.StopButton.Size = new System.Drawing.Size(160, 108);
-            this.StopButton.Style = Sunny.UI.UIStyle.Custom;
             this.StopButton.TabIndex = 21;
             this.StopButton.Text = "Stop";
             this.StopButton.Click += new System.EventHandler(this.StopButton_Click);
             // 
             // uiFlowLayoutPanel1
             // 
+            this.uiFlowLayoutPanel1.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.uiFlowLayoutPanel1.AutoScroll = true;
-            this.uiFlowLayoutPanel1.Controls.Add(this.uiGroupBox1);
-            this.uiFlowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.SetColumnSpan(this.uiFlowLayoutPanel1, 2);
+            this.uiFlowLayoutPanel1.Controls.Add(this.tableLayoutPanel2);
+            this.uiFlowLayoutPanel1.Controls.Add(this.tableLayoutPanel4);
+            this.uiFlowLayoutPanel1.Controls.Add(this.tableLayoutPanel3);
             this.uiFlowLayoutPanel1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.uiFlowLayoutPanel1.Location = new System.Drawing.Point(4, 200);
             this.uiFlowLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -187,134 +191,182 @@ namespace DiskTest11
             this.uiFlowLayoutPanel1.TabIndex = 24;
             this.uiFlowLayoutPanel1.Text = "uiFlowLayoutPanel1";
             this.uiFlowLayoutPanel1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            this.uiFlowLayoutPanel1.Click += new System.EventHandler(this.uiFlowLayoutPanel1_Click);
             // 
-            // uiGroupBox1
+            // tableLayoutPanel4
             // 
-            this.uiGroupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.uiGroupBox1.AutoSize = true;
-            this.uiGroupBox1.BackColor = System.Drawing.Color.White;
-            this.uiGroupBox1.Controls.Add(this.uiLabel1);
-            this.uiGroupBox1.Controls.Add(this.uiLabel11);
-            this.uiGroupBox1.Controls.Add(this.uiProcessBar1);
-            this.uiGroupBox1.Controls.Add(this.Now_Speed_Show_Label);
-            this.uiGroupBox1.Controls.Add(this.uiLabel9);
-            this.uiGroupBox1.Controls.Add(this.uiLabel3);
-            this.uiGroupBox1.Controls.Add(this.uiLabel4);
-            this.uiGroupBox1.Controls.Add(this.Written_MB_Show_Label);
-            this.uiGroupBox1.Controls.Add(this.uiLabel5);
-            this.uiGroupBox1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiGroupBox1.Location = new System.Drawing.Point(6, 7);
-            this.uiGroupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.uiGroupBox1.MinimumSize = new System.Drawing.Size(1, 1);
-            this.uiGroupBox1.Name = "uiGroupBox1";
-            this.uiGroupBox1.Padding = new System.Windows.Forms.Padding(0, 32, 0, 0);
-            this.uiGroupBox1.Radius = 30;
-            this.uiGroupBox1.RadiusSides = Sunny.UI.UICornerRadiusSides.RightTop;
-            this.uiGroupBox1.Size = new System.Drawing.Size(534, 425);
-            this.uiGroupBox1.TabIndex = 16;
-            this.uiGroupBox1.Text = "Disk1";
-            this.uiGroupBox1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            this.uiGroupBox1.Click += new System.EventHandler(this.uiGroupBox1_Click);
+            this.tableLayoutPanel4.ColumnCount = 1;
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.Controls.Add(this.userCurve1, 0, 0);
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(23, 30);
+            this.tableLayoutPanel4.Name = "tableLayoutPanel4";
+            this.tableLayoutPanel4.RowCount = 1;
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(734, 300);
+            this.tableLayoutPanel4.TabIndex = 23;
             // 
-            // uiLabel1
+            // userCurve1
             // 
-            this.uiLabel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
-            this.uiLabel1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiLabel1.Location = new System.Drawing.Point(17, 41);
-            this.uiLabel1.Name = "uiLabel1";
-            this.uiLabel1.Size = new System.Drawing.Size(413, 38);
-            this.uiLabel1.TabIndex = 1;
-            this.uiLabel1.Text = "Disk: C: cycle 1 writing";
-            this.uiLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.userCurve1.BackColor = System.Drawing.Color.Transparent;
+            this.userCurve1.IsAbscissaStrech = true;
+            this.userCurve1.Location = new System.Drawing.Point(14, 21);
+            this.userCurve1.Margin = new System.Windows.Forms.Padding(14, 21, 14, 21);
+            this.userCurve1.Name = "userCurve1";
+            this.userCurve1.Size = new System.Drawing.Size(688, 258);
+            this.userCurve1.StrechDataCountMax = 100;
+            this.userCurve1.TabIndex = 19;
+            this.userCurve1.ValueMaxLeft = 30F;
+            this.userCurve1.ValueMaxRight = 30F;
             // 
-            // uiLabel11
+            // tableLayoutPanel3
             // 
-            this.uiLabel11.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
-            this.uiLabel11.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiLabel11.Location = new System.Drawing.Point(202, 189);
-            this.uiLabel11.Name = "uiLabel11";
-            this.uiLabel11.Size = new System.Drawing.Size(100, 32);
-            this.uiLabel11.TabIndex = 13;
-            this.uiLabel11.Text = "MB/Sec";
-            this.uiLabel11.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // uiProcessBar1
-            // 
-            this.uiProcessBar1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiProcessBar1.Location = new System.Drawing.Point(22, 82);
-            this.uiProcessBar1.MinimumSize = new System.Drawing.Size(70, 5);
-            this.uiProcessBar1.Name = "uiProcessBar1";
-            this.uiProcessBar1.Size = new System.Drawing.Size(408, 29);
-            this.uiProcessBar1.TabIndex = 3;
-            this.uiProcessBar1.Text = "uiProcessBar1";
+            this.tableLayoutPanel3.ColumnCount = 6;
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.Controls.Add(this.Now_Speed_Show_Label, 1, 0);
+            this.tableLayoutPanel3.Controls.Add(this.uiLabel9, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.AVG_Speed_Text, 2, 0);
+            this.tableLayoutPanel3.Controls.Add(this.AVG_Speed_Show_Label, 3, 0);
+            this.tableLayoutPanel3.Controls.Add(this.uiLabel5, 4, 0);
+            this.tableLayoutPanel3.Controls.Add(this.Written_MB_Show_Label, 5, 0);
+            this.tableLayoutPanel3.Location = new System.Drawing.Point(23, 362);
+            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
+            this.tableLayoutPanel3.RowCount = 1;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(734, 79);
+            this.tableLayoutPanel3.TabIndex = 22;
+            this.tableLayoutPanel3.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel3_Paint);
             // 
             // Now_Speed_Show_Label
             // 
             this.Now_Speed_Show_Label.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
             this.Now_Speed_Show_Label.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.Now_Speed_Show_Label.Location = new System.Drawing.Point(149, 188);
+            this.Now_Speed_Show_Label.Location = new System.Drawing.Point(125, 0);
             this.Now_Speed_Show_Label.Name = "Now_Speed_Show_Label";
-            this.Now_Speed_Show_Label.Size = new System.Drawing.Size(82, 34);
-            this.Now_Speed_Show_Label.TabIndex = 12;
+            this.Now_Speed_Show_Label.Size = new System.Drawing.Size(116, 34);
+            this.Now_Speed_Show_Label.Style = Sunny.UI.UIStyle.Custom;
+            this.Now_Speed_Show_Label.TabIndex = 20;
             this.Now_Speed_Show_Label.Text = "2048";
             this.Now_Speed_Show_Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // uiLabel9
             // 
             this.uiLabel9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
-            this.uiLabel9.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiLabel9.Location = new System.Drawing.Point(18, 188);
+            this.uiLabel9.Font = new System.Drawing.Font("微软雅黑", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.uiLabel9.Location = new System.Drawing.Point(3, 0);
             this.uiLabel9.Name = "uiLabel9";
-            this.uiLabel9.Size = new System.Drawing.Size(178, 34);
-            this.uiLabel9.TabIndex = 11;
+            this.uiLabel9.Size = new System.Drawing.Size(116, 34);
+            this.uiLabel9.Style = Sunny.UI.UIStyle.Custom;
+            this.uiLabel9.TabIndex = 19;
             this.uiLabel9.Text = "Current Speed:";
             this.uiLabel9.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // uiLabel3
+            // AVG_Speed_Text
             // 
-            this.uiLabel3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
-            this.uiLabel3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiLabel3.Location = new System.Drawing.Point(18, 114);
-            this.uiLabel3.Name = "uiLabel3";
-            this.uiLabel3.Size = new System.Drawing.Size(107, 47);
-            this.uiLabel3.TabIndex = 5;
-            this.uiLabel3.Text = "Pattern:";
-            this.uiLabel3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.AVG_Speed_Text.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            this.AVG_Speed_Text.Font = new System.Drawing.Font("微软雅黑", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.AVG_Speed_Text.Location = new System.Drawing.Point(247, 0);
+            this.AVG_Speed_Text.Name = "AVG_Speed_Text";
+            this.AVG_Speed_Text.Size = new System.Drawing.Size(115, 34);
+            this.AVG_Speed_Text.Style = Sunny.UI.UIStyle.Custom;
+            this.AVG_Speed_Text.TabIndex = 22;
+            this.AVG_Speed_Text.Text = "AVG Speed:";
+            this.AVG_Speed_Text.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // uiLabel4
+            // AVG_Speed_Show_Label
             // 
-            this.uiLabel4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
-            this.uiLabel4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiLabel4.Location = new System.Drawing.Point(134, 115);
-            this.uiLabel4.Name = "uiLabel4";
-            this.uiLabel4.Size = new System.Drawing.Size(368, 46);
-            this.uiLabel4.TabIndex = 6;
-            this.uiLabel4.Text = "Ones Data Test(1111)";
-            this.uiLabel4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.AVG_Speed_Show_Label.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            this.AVG_Speed_Show_Label.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.AVG_Speed_Show_Label.Location = new System.Drawing.Point(369, 0);
+            this.AVG_Speed_Show_Label.Name = "AVG_Speed_Show_Label";
+            this.AVG_Speed_Show_Label.Size = new System.Drawing.Size(88, 32);
+            this.AVG_Speed_Show_Label.Style = Sunny.UI.UIStyle.Custom;
+            this.AVG_Speed_Show_Label.TabIndex = 23;
+            this.AVG_Speed_Show_Label.Text = "0";
+            this.AVG_Speed_Show_Label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // uiLabel5
+            // 
+            this.uiLabel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            this.uiLabel5.Font = new System.Drawing.Font("微软雅黑", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.uiLabel5.Location = new System.Drawing.Point(491, 0);
+            this.uiLabel5.Name = "uiLabel5";
+            this.uiLabel5.Size = new System.Drawing.Size(116, 37);
+            this.uiLabel5.Style = Sunny.UI.UIStyle.Custom;
+            this.uiLabel5.TabIndex = 17;
+            this.uiLabel5.Text = "WrittenMB:";
+            this.uiLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // Written_MB_Show_Label
             // 
             this.Written_MB_Show_Label.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
             this.Written_MB_Show_Label.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.Written_MB_Show_Label.Location = new System.Drawing.Point(159, 148);
+            this.Written_MB_Show_Label.Location = new System.Drawing.Point(613, 0);
             this.Written_MB_Show_Label.Name = "Written_MB_Show_Label";
-            this.Written_MB_Show_Label.Size = new System.Drawing.Size(281, 40);
-            this.Written_MB_Show_Label.TabIndex = 8;
+            this.Written_MB_Show_Label.Size = new System.Drawing.Size(118, 37);
+            this.Written_MB_Show_Label.Style = Sunny.UI.UIStyle.Custom;
+            this.Written_MB_Show_Label.TabIndex = 18;
             this.Written_MB_Show_Label.Text = "0.000";
             this.Written_MB_Show_Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // uiLabel5
+            // uiProcessBar1
             // 
-            this.uiLabel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
-            this.uiLabel5.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiLabel5.Location = new System.Drawing.Point(17, 151);
-            this.uiLabel5.Name = "uiLabel5";
-            this.uiLabel5.Size = new System.Drawing.Size(179, 37);
-            this.uiLabel5.TabIndex = 7;
-            this.uiLabel5.Text = "MBytes Written:";
-            this.uiLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.uiProcessBar1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.uiProcessBar1.Location = new System.Drawing.Point(143, 3);
+            this.uiProcessBar1.MinimumSize = new System.Drawing.Size(70, 5);
+            this.uiProcessBar1.Name = "uiProcessBar1";
+            this.uiProcessBar1.Size = new System.Drawing.Size(588, 30);
+            this.uiProcessBar1.TabIndex = 3;
+            this.uiProcessBar1.Text = "uiProcessBar1";
+            this.uiProcessBar1.ValueChanged += new Sunny.UI.UIProcessBar.OnValueChanged(this.uiProcessBar1_ValueChanged);
+            // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.tableLayoutPanel2.ColumnCount = 3;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 11.57247F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 7.68935F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80.73818F));
+            this.tableLayoutPanel2.Controls.Add(this.uiProcessBar1, 2, 0);
+            this.tableLayoutPanel2.Controls.Add(this.label1, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.Circle_Num_Label, 1, 0);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(23, 466);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.tableLayoutPanel2.RowCount = 1;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(734, 36);
+            this.tableLayoutPanel2.TabIndex = 24;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("微软雅黑", 10.5F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label1.Location = new System.Drawing.Point(3, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(76, 28);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "Circle:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label1.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // Circle_Num_Label
+            // 
+            this.Circle_Num_Label.AutoSize = true;
+            this.Circle_Num_Label.Location = new System.Drawing.Point(87, 0);
+            this.Circle_Num_Label.Name = "Circle_Num_Label";
+            this.Circle_Num_Label.Size = new System.Drawing.Size(44, 36);
+            this.Circle_Num_Label.TabIndex = 5;
+            this.Circle_Num_Label.Text = "----";
+            this.Circle_Num_Label.Click += new System.EventHandler(this.label2_Click);
             // 
             // Test2
             // 
@@ -328,8 +380,10 @@ namespace DiskTest11
             this.tableLayoutPanel1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.uiFlowLayoutPanel1.ResumeLayout(false);
-            this.uiFlowLayoutPanel1.PerformLayout();
-            this.uiGroupBox1.ResumeLayout(false);
+            this.tableLayoutPanel4.ResumeLayout(false);
+            this.tableLayoutPanel3.ResumeLayout(false);
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.tableLayoutPanel2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -347,15 +401,18 @@ namespace DiskTest11
         private Sunny.UI.UILabel uiLabel12;
         private Sunny.UI.UIButton StopButton;
         private Sunny.UI.UIFlowLayoutPanel uiFlowLayoutPanel1;
-        private Sunny.UI.UIGroupBox uiGroupBox1;
-        private Sunny.UI.UILabel uiLabel1;
-        private Sunny.UI.UILabel uiLabel11;
         private Sunny.UI.UIProcessBar uiProcessBar1;
-        private Sunny.UI.UILabel Now_Speed_Show_Label;
-        private Sunny.UI.UILabel uiLabel9;
-        private Sunny.UI.UILabel uiLabel3;
-        private Sunny.UI.UILabel uiLabel4;
+        private HslCommunication.Controls.UserCurve userCurve1;
         private Sunny.UI.UILabel Written_MB_Show_Label;
         private Sunny.UI.UILabel uiLabel5;
+        private Sunny.UI.UILabel AVG_Speed_Text;
+        private Sunny.UI.UILabel AVG_Speed_Show_Label;
+        private Sunny.UI.UILabel uiLabel9;
+        private Sunny.UI.UILabel Now_Speed_Show_Label;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label Circle_Num_Label;
     }
 }

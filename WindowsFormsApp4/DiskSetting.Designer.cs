@@ -38,17 +38,17 @@ namespace DiskTest11
             this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.Reflesh_Button = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Disk_Information_Framework)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.Reflesh_Button);
             this.groupBox1.Controls.Add(this.StartTest);
             this.groupBox1.Controls.Add(this.panel1);
             this.groupBox1.Controls.Add(this.Disk_Information_Framework);
-            this.groupBox1.Controls.Add(this.checkBox1);
             this.groupBox1.Location = new System.Drawing.Point(28, 12);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(767, 761);
@@ -58,9 +58,9 @@ namespace DiskTest11
             // 
             // StartTest
             // 
-            this.StartTest.Location = new System.Drawing.Point(258, 718);
+            this.StartTest.Location = new System.Drawing.Point(292, 703);
             this.StartTest.Name = "StartTest";
-            this.StartTest.Size = new System.Drawing.Size(156, 37);
+            this.StartTest.Size = new System.Drawing.Size(163, 52);
             this.StartTest.TabIndex = 15;
             this.StartTest.Text = "开始测试";
             this.StartTest.UseVisualStyleBackColor = true;
@@ -70,7 +70,7 @@ namespace DiskTest11
             // 
             this.panel1.Location = new System.Drawing.Point(34, 238);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(673, 474);
+            this.panel1.Size = new System.Drawing.Size(673, 459);
             this.panel1.TabIndex = 10;
             // 
             // Disk_Information_Framework
@@ -127,15 +127,16 @@ namespace DiskTest11
             this.Column5.Name = "Column5";
             this.Column5.Width = 150;
             // 
-            // checkBox1
+            // Reflesh_Button
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(34, 28);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(686, 35);
-            this.checkBox1.TabIndex = 0;
-            this.checkBox1.Text = "Automatically select all fixed drives at the start of testing";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.Reflesh_Button.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.Reflesh_Button.Location = new System.Drawing.Point(34, 32);
+            this.Reflesh_Button.Name = "Reflesh_Button";
+            this.Reflesh_Button.Size = new System.Drawing.Size(83, 31);
+            this.Reflesh_Button.TabIndex = 16;
+            this.Reflesh_Button.Text = "reflesh";
+            this.Reflesh_Button.UseVisualStyleBackColor = true;
+            this.Reflesh_Button.Click += new System.EventHandler(this.Reflesh_Button_Click);
             // 
             // DiskSetting
             // 
@@ -146,7 +147,6 @@ namespace DiskTest11
             this.Name = "DiskSetting";
             this.Text = "Disk";
             this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Disk_Information_Framework)).EndInit();
             this.ResumeLayout(false);
 
@@ -154,7 +154,6 @@ namespace DiskTest11
 
         #endregion
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.DataGridView Disk_Information_Framework;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
@@ -163,5 +162,6 @@ namespace DiskTest11
         private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button StartTest;
+        private System.Windows.Forms.Button Reflesh_Button;
     }
 }
