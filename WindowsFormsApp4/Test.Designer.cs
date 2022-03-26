@@ -307,7 +307,7 @@ namespace DiskTest11
             this.Now_Speed_Show_Label.Size = new System.Drawing.Size(116, 34);
             this.Now_Speed_Show_Label.Style = Sunny.UI.UIStyle.Custom;
             this.Now_Speed_Show_Label.TabIndex = 20;
-            this.Now_Speed_Show_Label.Text = "2048";
+            this.Now_Speed_Show_Label.Text = "----";
             this.Now_Speed_Show_Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // uiLabel9
@@ -343,7 +343,7 @@ namespace DiskTest11
             this.AVG_Speed_Show_Label.Size = new System.Drawing.Size(88, 32);
             this.AVG_Speed_Show_Label.Style = Sunny.UI.UIStyle.Custom;
             this.AVG_Speed_Show_Label.TabIndex = 23;
-            this.AVG_Speed_Show_Label.Text = "0";
+            this.AVG_Speed_Show_Label.Text = "----";
             this.AVG_Speed_Show_Label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // uiLabel5
@@ -367,7 +367,7 @@ namespace DiskTest11
             this.Written_MB_Show_Label.Size = new System.Drawing.Size(118, 37);
             this.Written_MB_Show_Label.Style = Sunny.UI.UIStyle.Custom;
             this.Written_MB_Show_Label.TabIndex = 18;
-            this.Written_MB_Show_Label.Text = "0.000";
+            this.Written_MB_Show_Label.Text = "----";
             this.Written_MB_Show_Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // Test2
