@@ -27,7 +27,7 @@ namespace DiskTest11
     public delegate void SwitchEventHandler(int i);//切换页面
     public delegate void LogEventHandler(int grade,string s);//日志
     public delegate void StartTimeEventHandler(string s);//日志
-    public delegate void TestTimeEventHandler();
+    public delegate void TestEndEventHandler();
     public delegate void CircleNumHandler(int circlenum);
     public partial class DiskSetting : Sunny.UI.UIPage
     {
@@ -115,7 +115,7 @@ namespace DiskTest11
         public SwitchEventHandler SwitchEvent;//切换界面
         public LogEventHandler LogEvent;//日志打印
         public StartTimeEventHandler StartTimeEvent;//传递开始时间
-        public TestTimeEventHandler TestTimeEvent;
+        public TestEndEventHandler TestEndEvent;
         public CircleNumHandler CircleNumEvent;
         /// <summary>
         /// 传递平均速度的事件
@@ -416,17 +416,17 @@ namespace DiskTest11
         {
             WrittenAndSpeedEvent += observer;
         }
-        public void AddTestTimeObserver(TestTimeEventHandler observer)
+        public void AddTestEndObserver(TestEndEventHandler observer)
         {
-            TestTimeEvent += observer;
-        }
+            TestEndEvent += observer;
+        }       
         public void AddCircleNumObserver(CircleNumHandler observer)
         {
             CircleNumEvent += observer;
         }
         public void SendTestTime()
         {
-            TestTimeEvent();
+            TestEndEvent();
         }
         public void SendTestTime_Thread(object obj)
         {
@@ -441,7 +441,7 @@ namespace DiskTest11
                 endtime = Environment.TickCount;
                 if((endtime-starttime)%1000==0)
                 {
-                    TestTimeEvent();
+                    TestEndEvent();
                 }
             }
         }
@@ -523,6 +523,10 @@ namespace DiskTest11
         public void PublishCircleNum(int circlenum)
         {
             if (CircleNumEvent != null) CircleNumEvent(circlenum);
+        }
+        public void PublishTestEnd()
+        {
+            TestEndEvent();
         }
         /// <summary>
         /// 从Disk.cs中获取测试的选项信息
@@ -626,6 +630,7 @@ namespace DiskTest11
                     ShowInfoTip(info.Physical_Name+ " 驱动器开始测试");
                     if (chooseInformation.TestMode == RANDOM_VERTIFY)
                     {
+                        this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                         MultiRandomWriteAndVerifyCT(chooseInformation);
                         //RandomWriteAndVerify(i, chooseInformation.TestNum, chooseInformation.TestTime, 2, chooseInformation.BlockSize);
                     }
@@ -635,6 +640,7 @@ namespace DiskTest11
                     //}
                     else if (chooseInformation.TestMode == RANDOM_READ)//随机只读
                     {
+                        this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                         MultiRandomOnlyReadCT(chooseInformation);
                         //RandomOnlyRead(i, chooseInformation.TestNum, chooseInformation.TestTime, chooseInformation.BlockSize);
                     }
@@ -644,6 +650,7 @@ namespace DiskTest11
                     //}
                     else if (chooseInformation.TestMode == RANDOM_WRITE )//随机只写
                     {
+                        this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                         MultiRandomOnlyWriteCT(chooseInformation);
                         //RandomOnlyWrite(i, chooseInformation.TestNum, chooseInformation.TestTime, 2, chooseInformation.BlockSize);
                     }
@@ -654,6 +661,7 @@ namespace DiskTest11
                     else if (chooseInformation.TestMode == ORDER_VERTIFY)//顺序读写验证
                     {
                         //OrderWriteAndVerify(chooseInformation);
+                        this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                         MultiOrderWriteAndVerifyCT(chooseInformation);
                         //OrderWriteAndVertify_one(i, chooseInformation.TestPercent, chooseInformation.TestDataMode, chooseInformation.BlockSize, chooseInformation.TestCircle);
                     }
@@ -664,12 +672,13 @@ namespace DiskTest11
                    // }
                     else if (chooseInformation.TestMode == ORDER_READ )//顺序只读
                     {
+                        this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                         //for(int j=0;j<chooseInformation.TestCircle;j++)
                         //{
-                            //TestDelegate test = MultiOrderOnlyReadCT;
-                            //IAsyncResult asyncResult = test.BeginInvoke(chooseInformation, null, null);
-                            //test.EndInvoke(asyncResult);
-                            MultiOrderOnlyReadCT(chooseInformation);                           
+                        //TestDelegate test = MultiOrderOnlyReadCT;
+                        //IAsyncResult asyncResult = test.BeginInvoke(chooseInformation, null, null);
+                        //test.EndInvoke(asyncResult);
+                        MultiOrderOnlyReadCT(chooseInformation);                           
                             //ShowInfoTip("第" + j + 1 + "次循环开始");
                             
                        // }
@@ -682,6 +691,7 @@ namespace DiskTest11
                     //}
                     else if (chooseInformation.TestMode == ORDER_WRITE )//顺序只写
                     {
+                        this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
                         //TestDelegate test = MultiOrderOnlyWriteCT;
                         //IAsyncResult asyncResult=test.BeginInvoke(chooseInformation,null,null);
                         //test.EndInvoke(asyncResult);
@@ -712,9 +722,10 @@ namespace DiskTest11
         {
 
             Init_Disk_Driver();
+            //Init_Choose_And_Repeat_Status_ArrayList();
             //GetWriteSpeed = OutWriteSpeed;
             this.SwitchPage(201);
-            this.PublishStartTime(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"));
+            
             Thread thr = new Thread(new ParameterizedThreadStart(Start_Test));
             thr.Start();
             
@@ -1305,6 +1316,8 @@ namespace DiskTest11
             NOW_CIRCLE++;
             if (NOW_CIRCLE < info.TestCircle)
                 MultiOrderWriteAndVerifyCT(info);
+            else
+                PublishTestEnd();
         }
         /// <summary>
         /// 顺序读写验证,已修改测速模式，已验证速度无误
@@ -1514,6 +1527,9 @@ namespace DiskTest11
             NOW_CIRCLE++;
             if (NOW_CIRCLE < info.TestCircle)
                 MultiOrderOnlyWriteCT(info);
+            else
+                PublishTestEnd();
+                //Console.WriteLine("---------------Test is final end!!!----------------");
         }
         public void MultiOrderOnlyWrite(object o)//int driver_index, int percent_of_all_size = 100, int data_mode = 0, int block_size = 0, int circle = 1, int thread_num=1
         {
@@ -1723,6 +1739,8 @@ namespace DiskTest11
             NOW_CIRCLE++;
             if (NOW_CIRCLE < info.TestCircle)
                 MultiOrderOnlyReadCT(info);
+            else
+                PublishTestEnd();
         }
         public void MultiOrderOnlyRead(object o)
         {
@@ -1916,6 +1934,12 @@ namespace DiskTest11
                 threads[i].Start(new MultiThreadInfo(driver, info, i));
                 resetEvents[i] = new AutoResetEvent(true);
             }
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i].Join();
+            }
+            Console.WriteLine("---------------wohoo,random all is end!");
+            PublishTestEnd();
         }
         public void MultiRandomWriteAndVerify(object o)
         {
@@ -2134,6 +2158,12 @@ namespace DiskTest11
                 threads[i].Start(new MultiThreadInfo(driver, info, i));
                 resetEvents[i] = new AutoResetEvent(true);
             }
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i].Join();
+            }
+            Console.WriteLine("---------------wohoo,random all is end!");
+            PublishTestEnd();
         }
         public void MultiRandomOnlyWrite(object o)
         {
@@ -2254,6 +2284,12 @@ namespace DiskTest11
                 threads[i].Start(new MultiThreadInfo(driver, info, i));
                 resetEvents[i] = new AutoResetEvent(true);
             }
+            for (int i = 0; i < info.ThreadNum; i++)
+            {
+                threads[i].Join();
+            }
+            Console.WriteLine("---------------wohoo,random all is end!");
+            PublishTestEnd();
         }
         public void MultiRandomOnlyRead(object o)
         {

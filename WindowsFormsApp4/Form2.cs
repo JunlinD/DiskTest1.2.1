@@ -23,7 +23,7 @@ namespace DiskTest11
         {
             InitializeComponent();
             diskSetting = new DiskSetting();
-            test2 = new Test2();
+            test2 = new Test2();                      
             log = new Log();
             logging = new Logging();
             int pageIndex = 100;
@@ -37,16 +37,17 @@ namespace DiskTest11
             diskSetting.AddCircleNumObserver(new CircleNumHandler(test2.ReceiveCircleNumEvent));
             test2.addStopTestOberver(new StopTestEventHandler(diskSetting.Get_Stop_Button_Status_Event));
             diskSetting.AddStartTimeObserver(new StartTimeEventHandler(test2.GetStartTimeEvent));
-            diskSetting.AddTestTimeObserver(new TestTimeEventHandler(test2.ReceiveTestTimeEvent));
+            diskSetting.AddTestEndObserver(new TestEndEventHandler(test2.ReceiveStopTime));
             TreeNode parent = Aside.CreateNode("Setting", pageIndex);
             Aside.CreateChildNode(parent, AddPage(diskSetting, ++pageIndex));
-            Aside.CreateChildNode(parent, AddPage(new Errors(), ++pageIndex));
+            //Aside.CreateChildNode(parent, AddPage(new Errors(), ++pageIndex));
             Aside.CreateChildNode(parent, AddPage(logging, ++pageIndex));
             pageIndex = 200;
             parent = Aside.CreateNode("Test", pageIndex);
+            //Aside.Nodes[201].Name = "TestINF";
             Aside.CreateChildNode(parent, AddPage(test2, ++pageIndex));
             Aside.CreateChildNode(parent, AddPage(log, ++pageIndex));
-            Aside.CreateChildNode(parent, AddPage(new Information(), ++pageIndex));
+            //Aside.CreateChildNode(parent, AddPage(new Information(), ++pageIndex));
             Aside.SelectPage(101);
         }
 
@@ -58,6 +59,11 @@ namespace DiskTest11
                     Aside.SelectPage(pageIndex);
                     break;
             }
+        }
+
+        private void Aside_MenuItemClick(TreeNode node, Sunny.UI.NavMenuItem item, int pageIndex)
+        {
+
         }
     }
 }

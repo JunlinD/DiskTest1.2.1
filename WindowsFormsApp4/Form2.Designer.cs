@@ -35,6 +35,7 @@ namespace DiskTest11
             // 
             this.Aside.LineColor = System.Drawing.Color.Black;
             this.Aside.Size = new System.Drawing.Size(250, 623);
+            this.Aside.MenuItemClick += new Sunny.UI.UINavMenu.OnMenuItemClick(this.Aside_MenuItemClick);
             // 
             // DiskTest
             // 

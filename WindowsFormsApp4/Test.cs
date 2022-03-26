@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using System.Diagnostics;
 namespace DiskTest11
 {
     /// <summary>
@@ -32,6 +32,8 @@ namespace DiskTest11
         private TimeSpan Gap_Time;
         private DateTime Start_Time;
         private DateTime End_Time;
+        private Stopwatch TestTime;
+        private Timer timer;
         private double Max_Speed;
         private double Min_Speed;
         private bool Max_Set;
@@ -47,6 +49,9 @@ namespace DiskTest11
             Max_Speed = 5;
             Min_Speed = 1;
             floatarray = new ArrayList();
+            timer = new Timer();
+            timer.Interval = 100;
+            TestTime = new Stopwatch();
             InitializeComponent();
 
         }
@@ -97,7 +102,7 @@ namespace DiskTest11
         {
             this.Circle_Num_Label.Text = circlenum.ToString();
         }
-        public void ReceiveTestTimeEvent()
+        public void ReceiveStopTestEvent()
         {
             if (this.Duration_Time_Show.InvokeRequired)
             {
@@ -106,14 +111,16 @@ namespace DiskTest11
             }
             else
             {
-                ReceiveTestTime();
+                ReceiveStopTime();
             }
         }
-        public void ReceiveTestTime()
+        public void ReceiveStopTime()
         {
-            TimeSpan ts = DateTime.Now - Start_Time - Gap_Time;
-            Console.WriteLine("DateTime.Now: " + DateTime.Now.ToString());
-            this.Duration_Time_Show.Text = ts.Minutes.ToString() + "m " + ts.Seconds.ToString() + "s";
+            timer.Stop();
+            TestTime.Stop();
+            //TimeSpan ts = DateTime.Now - Start_Time - Gap_Time;
+            //Console.WriteLine("DateTime.Now: " + DateTime.Now.ToString());
+            //this.Duration_Time_Show.Text = ts.Minutes.ToString() + "m " + ts.Seconds.ToString() + "s";
         }
         /// <summary>
         /// 接受进度条和时间的委托事件
@@ -216,10 +223,35 @@ namespace DiskTest11
             this.Start_Time_Show.Text = s;
             Start_Time= Convert.ToDateTime(s);
             Gap_Time =DateTime.Now-DateTime.Now;
-            
+            TestTime.Restart();
+            timer.Start();
+            ComputeTestTimeEvent();
             userCurve1.RemoveCurve("SPEED");
             data=new float[] { };
             this.userCurve1.SetLeftCurve("SPEED", data, Color.Tomato);
+        }
+        public void ComputeTestTimeEvent()
+        {
+            if (this.Duration_Time_Show.InvokeRequired)
+            {
+                GetStartTimeEventHandler ct = new GetStartTimeEventHandler(GetStartTimeEvent);
+                this.Invoke(ct, new object[] {  });
+            }
+            else
+            {
+                ComputeTestTime();
+            }
+        }
+        public void ComputeTestTime()
+        {
+            timer.Tick += (sender1, e1) =>
+            {
+                TestTime.Stop();
+                Duration_Time_Show.Text = TestTime.Elapsed.Minutes+"m" + String.Format("{0:F}",TestTime.Elapsed.Seconds.ToString())+"s";
+                TestTime.Start();
+                //userCurve1.AddCurveData("B", random.Next(50, 201));
+            };
+            timer.Start();
         }
         public void Receive(int now,double speed,double written_MB,string now_time)
         {
@@ -253,16 +285,20 @@ namespace DiskTest11
                 PublishStopTest(Stop_Button_Status);//广播状态，暂停测试线程的执行,将false传给DiskSetting
                 Stop_Button_Status = true;
                 this.StopButton.Text = "Start";
-                Gap_Start_Time = DateTime.Now;
+                //Gap_Start_Time = DateTime.Now;
+                timer.Stop();
+                TestTime.Stop();
             }
             else
             {
                 PublishStopTest(Stop_Button_Status);
                 Stop_Button_Status = false;
                 this.StopButton.Text = "Stop";
-                Gap_End_Time = DateTime.Now;
-                TimeSpan span = Gap_End_Time - Gap_Start_Time;
-                Gap_Time += span;
+                //Gap_End_Time = DateTime.Now;
+                //TimeSpan span = Gap_End_Time - Gap_Start_Time;
+                //Gap_Time += span;
+                timer.Start();
+                TestTime.Start();
             }
         }
 

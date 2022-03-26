@@ -32,52 +32,65 @@ namespace DiskTest11
         private void InitializeComponent()
         {
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.ThreadNumble = new System.Windows.Forms.TextBox();
-            this.label9 = new System.Windows.Forms.Label();
+            this.Choose_TestNumradioButton = new System.Windows.Forms.RadioButton();
+            this.Choose_TestTimeradioButton = new System.Windows.Forms.RadioButton();
+            this.ThreadNum_label = new System.Windows.Forms.Label();
             this.Record_CheckBox = new System.Windows.Forms.CheckBox();
             this.Repeat_Test_Checkbox = new System.Windows.Forms.CheckBox();
-            this.label8 = new System.Windows.Forms.Label();
+            this.KB_label = new System.Windows.Forms.Label();
             this.confirm = new System.Windows.Forms.Button();
             this.TestDataMode = new System.Windows.Forms.ComboBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.CircleNumble = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
+            this.TestDataMode_label = new System.Windows.Forms.Label();
+            this.CircleNum_label = new System.Windows.Forms.Label();
             this.TestMode = new System.Windows.Forms.ComboBox();
-            this.TestTime = new System.Windows.Forms.TextBox();
+            this.TestTime_s = new System.Windows.Forms.TextBox();
             this.TestNum = new System.Windows.Forms.TextBox();
-            this.TestPercent = new System.Windows.Forms.TextBox();
             this.BlockSize = new System.Windows.Forms.ComboBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.TestTime_label = new System.Windows.Forms.Label();
+            this.TestNum_label = new System.Windows.Forms.Label();
+            this.TestBlock_label = new System.Windows.Forms.Label();
+            this.TestPercent_label = new System.Windows.Forms.Label();
+            this.Test_Mode_label = new System.Windows.Forms.Label();
             this.TestOrNot = new System.Windows.Forms.CheckBox();
+            this.TestTime_S_label = new System.Windows.Forms.Label();
+            this.TestTime_M_label = new System.Windows.Forms.Label();
+            this.TestTime_m = new System.Windows.Forms.TextBox();
+            this.TestPercent = new System.Windows.Forms.NumericUpDown();
+            this.ThreadNumble = new System.Windows.Forms.NumericUpDown();
+            this.CircleNumble = new System.Windows.Forms.NumericUpDown();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TestPercent)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ThreadNumble)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.CircleNumble)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.CircleNumble);
             this.groupBox2.Controls.Add(this.ThreadNumble);
-            this.groupBox2.Controls.Add(this.label9);
+            this.groupBox2.Controls.Add(this.TestPercent);
+            this.groupBox2.Controls.Add(this.TestTime_M_label);
+            this.groupBox2.Controls.Add(this.TestTime_m);
+            this.groupBox2.Controls.Add(this.TestTime_S_label);
+            this.groupBox2.Controls.Add(this.Choose_TestNumradioButton);
+            this.groupBox2.Controls.Add(this.Choose_TestTimeradioButton);
+            this.groupBox2.Controls.Add(this.ThreadNum_label);
             this.groupBox2.Controls.Add(this.Record_CheckBox);
             this.groupBox2.Controls.Add(this.Repeat_Test_Checkbox);
-            this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.KB_label);
             this.groupBox2.Controls.Add(this.confirm);
             this.groupBox2.Controls.Add(this.TestDataMode);
-            this.groupBox2.Controls.Add(this.label7);
-            this.groupBox2.Controls.Add(this.CircleNumble);
-            this.groupBox2.Controls.Add(this.label6);
+            this.groupBox2.Controls.Add(this.TestDataMode_label);
+            this.groupBox2.Controls.Add(this.CircleNum_label);
             this.groupBox2.Controls.Add(this.TestMode);
-            this.groupBox2.Controls.Add(this.TestTime);
+            this.groupBox2.Controls.Add(this.TestTime_s);
             this.groupBox2.Controls.Add(this.TestNum);
-            this.groupBox2.Controls.Add(this.TestPercent);
             this.groupBox2.Controls.Add(this.BlockSize);
-            this.groupBox2.Controls.Add(this.label5);
-            this.groupBox2.Controls.Add(this.label4);
-            this.groupBox2.Controls.Add(this.label3);
-            this.groupBox2.Controls.Add(this.label2);
-            this.groupBox2.Controls.Add(this.label1);
+            this.groupBox2.Controls.Add(this.TestTime_label);
+            this.groupBox2.Controls.Add(this.TestNum_label);
+            this.groupBox2.Controls.Add(this.TestBlock_label);
+            this.groupBox2.Controls.Add(this.TestPercent_label);
+            this.groupBox2.Controls.Add(this.Test_Mode_label);
             this.groupBox2.Controls.Add(this.TestOrNot);
             this.groupBox2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.groupBox2.Location = new System.Drawing.Point(12, 0);
@@ -87,24 +100,44 @@ namespace DiskTest11
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Edit details";
             // 
-            // ThreadNumble
+            // Choose_TestNumradioButton
             // 
-            this.ThreadNumble.Location = new System.Drawing.Point(99, 247);
-            this.ThreadNumble.Name = "ThreadNumble";
-            this.ThreadNumble.Size = new System.Drawing.Size(130, 31);
-            this.ThreadNumble.TabIndex = 27;
-            this.ThreadNumble.Text = "1";
-            this.ThreadNumble.TextChanged += new System.EventHandler(this.ThreadNumble_TextChanged);
+            this.Choose_TestNumradioButton.AutoSize = true;
+            this.Choose_TestNumradioButton.Font = new System.Drawing.Font("微软雅黑", 7.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.Choose_TestNumradioButton.Location = new System.Drawing.Point(132, 153);
+            this.Choose_TestNumradioButton.Name = "Choose_TestNumradioButton";
+            this.Choose_TestNumradioButton.Size = new System.Drawing.Size(94, 23);
+            this.Choose_TestNumradioButton.TabIndex = 29;
+            this.Choose_TestNumradioButton.TabStop = true;
+            this.Choose_TestNumradioButton.Text = "选择次数";
+            this.Choose_TestNumradioButton.UseVisualStyleBackColor = true;
+            this.Choose_TestNumradioButton.Visible = false;
+            this.Choose_TestNumradioButton.CheckedChanged += new System.EventHandler(this.Choose_TestNumradioButton_CheckedChanged);
             // 
-            // label9
+            // Choose_TestTimeradioButton
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(11, 247);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(64, 24);
-            this.label9.TabIndex = 26;
-            this.label9.Text = "线程数";
-            this.label9.Click += new System.EventHandler(this.label9_Click);
+            this.Choose_TestTimeradioButton.AutoSize = true;
+            this.Choose_TestTimeradioButton.Font = new System.Drawing.Font("微软雅黑", 7.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.Choose_TestTimeradioButton.Location = new System.Drawing.Point(15, 153);
+            this.Choose_TestTimeradioButton.Name = "Choose_TestTimeradioButton";
+            this.Choose_TestTimeradioButton.Size = new System.Drawing.Size(94, 23);
+            this.Choose_TestTimeradioButton.TabIndex = 28;
+            this.Choose_TestTimeradioButton.TabStop = true;
+            this.Choose_TestTimeradioButton.Text = "选择时间";
+            this.Choose_TestTimeradioButton.UseVisualStyleBackColor = true;
+            this.Choose_TestTimeradioButton.Visible = false;
+            this.Choose_TestTimeradioButton.CheckedChanged += new System.EventHandler(this.Choose_TestTimeradioButton_CheckedChanged);
+            // 
+            // ThreadNum_label
+            // 
+            this.ThreadNum_label.AutoSize = true;
+            this.ThreadNum_label.Location = new System.Drawing.Point(280, 247);
+            this.ThreadNum_label.Name = "ThreadNum_label";
+            this.ThreadNum_label.Size = new System.Drawing.Size(64, 24);
+            this.ThreadNum_label.TabIndex = 26;
+            this.ThreadNum_label.Text = "线程数";
+            this.ThreadNum_label.Visible = false;
+            this.ThreadNum_label.Click += new System.EventHandler(this.label9_Click);
             // 
             // Record_CheckBox
             // 
@@ -116,6 +149,7 @@ namespace DiskTest11
             this.Record_CheckBox.TabIndex = 25;
             this.Record_CheckBox.Text = "Record";
             this.Record_CheckBox.UseVisualStyleBackColor = true;
+            this.Record_CheckBox.Visible = false;
             // 
             // Repeat_Test_Checkbox
             // 
@@ -127,16 +161,18 @@ namespace DiskTest11
             this.Repeat_Test_Checkbox.TabIndex = 24;
             this.Repeat_Test_Checkbox.Text = "Repeat";
             this.Repeat_Test_Checkbox.UseVisualStyleBackColor = true;
+            this.Repeat_Test_Checkbox.Visible = false;
             this.Repeat_Test_Checkbox.CheckedChanged += new System.EventHandler(this.Repeat_Test_CheckBoxChanged);
             // 
-            // label8
+            // KB_label
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(243, 161);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(32, 24);
-            this.label8.TabIndex = 23;
-            this.label8.Text = "KB";
+            this.KB_label.AutoSize = true;
+            this.KB_label.Location = new System.Drawing.Point(501, 155);
+            this.KB_label.Name = "KB_label";
+            this.KB_label.Size = new System.Drawing.Size(32, 24);
+            this.KB_label.TabIndex = 23;
+            this.KB_label.Text = "KB";
+            this.KB_label.Visible = false;
             // 
             // confirm
             // 
@@ -161,32 +197,27 @@ namespace DiskTest11
             this.TestDataMode.Name = "TestDataMode";
             this.TestDataMode.Size = new System.Drawing.Size(130, 32);
             this.TestDataMode.TabIndex = 21;
+            this.TestDataMode.Visible = false;
             // 
-            // label7
+            // TestDataMode_label
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(11, 102);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(82, 24);
-            this.label7.TabIndex = 20;
-            this.label7.Text = "数据类型";
+            this.TestDataMode_label.AutoSize = true;
+            this.TestDataMode_label.Location = new System.Drawing.Point(11, 102);
+            this.TestDataMode_label.Name = "TestDataMode_label";
+            this.TestDataMode_label.Size = new System.Drawing.Size(82, 24);
+            this.TestDataMode_label.TabIndex = 20;
+            this.TestDataMode_label.Text = "数据类型";
+            this.TestDataMode_label.Visible = false;
             // 
-            // CircleNumble
+            // CircleNum_label
             // 
-            this.CircleNumble.Location = new System.Drawing.Point(368, 204);
-            this.CircleNumble.Name = "CircleNumble";
-            this.CircleNumble.Size = new System.Drawing.Size(130, 31);
-            this.CircleNumble.TabIndex = 19;
-            this.CircleNumble.Text = "0";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(280, 207);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(82, 24);
-            this.label6.TabIndex = 18;
-            this.label6.Text = "循环次数";
+            this.CircleNum_label.AutoSize = true;
+            this.CircleNum_label.Location = new System.Drawing.Point(280, 200);
+            this.CircleNum_label.Name = "CircleNum_label";
+            this.CircleNum_label.Size = new System.Drawing.Size(82, 24);
+            this.CircleNum_label.TabIndex = 18;
+            this.CircleNum_label.Text = "循环次数";
+            this.CircleNum_label.Visible = false;
             // 
             // TestMode
             // 
@@ -205,31 +236,26 @@ namespace DiskTest11
             this.TestMode.Name = "TestMode";
             this.TestMode.Size = new System.Drawing.Size(355, 32);
             this.TestMode.TabIndex = 17;
+            this.TestMode.Visible = false;
             this.TestMode.SelectedIndexChanged += new System.EventHandler(this.TestMode_SelectedIndexChanged);
             // 
-            // TestTime
+            // TestTime_s
             // 
-            this.TestTime.Location = new System.Drawing.Point(99, 200);
-            this.TestTime.Name = "TestTime";
-            this.TestTime.Size = new System.Drawing.Size(130, 31);
-            this.TestTime.TabIndex = 10;
-            this.TestTime.Text = "0";
+            this.TestTime_s.Location = new System.Drawing.Point(179, 197);
+            this.TestTime_s.Name = "TestTime_s";
+            this.TestTime_s.Size = new System.Drawing.Size(32, 31);
+            this.TestTime_s.TabIndex = 10;
+            this.TestTime_s.Text = "0";
+            this.TestTime_s.Visible = false;
             // 
             // TestNum
             // 
-            this.TestNum.Location = new System.Drawing.Point(368, 158);
+            this.TestNum.Location = new System.Drawing.Point(99, 247);
             this.TestNum.Name = "TestNum";
             this.TestNum.Size = new System.Drawing.Size(130, 31);
             this.TestNum.TabIndex = 9;
             this.TestNum.Text = "0";
-            // 
-            // TestPercent
-            // 
-            this.TestPercent.Location = new System.Drawing.Point(368, 107);
-            this.TestPercent.Name = "TestPercent";
-            this.TestPercent.Size = new System.Drawing.Size(130, 31);
-            this.TestPercent.TabIndex = 8;
-            this.TestPercent.Text = "100";
+            this.TestNum.Visible = false;
             // 
             // BlockSize
             // 
@@ -252,55 +278,62 @@ namespace DiskTest11
             "16384",
             "32768",
             "65536"});
-            this.BlockSize.Location = new System.Drawing.Point(96, 153);
+            this.BlockSize.Location = new System.Drawing.Point(365, 152);
             this.BlockSize.Name = "BlockSize";
             this.BlockSize.Size = new System.Drawing.Size(130, 32);
             this.BlockSize.TabIndex = 7;
+            this.BlockSize.Visible = false;
+            this.BlockSize.SelectedIndexChanged += new System.EventHandler(this.BlockSize_SelectedIndexChanged);
             // 
-            // label5
+            // TestTime_label
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(11, 200);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(82, 24);
-            this.label5.TabIndex = 6;
-            this.label5.Text = "测试时间";
+            this.TestTime_label.AutoSize = true;
+            this.TestTime_label.Location = new System.Drawing.Point(11, 200);
+            this.TestTime_label.Name = "TestTime_label";
+            this.TestTime_label.Size = new System.Drawing.Size(82, 24);
+            this.TestTime_label.TabIndex = 6;
+            this.TestTime_label.Text = "测试时间";
+            this.TestTime_label.Visible = false;
             // 
-            // label4
+            // TestNum_label
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(280, 161);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(82, 24);
-            this.label4.TabIndex = 5;
-            this.label4.Text = "测试次数";
+            this.TestNum_label.AutoSize = true;
+            this.TestNum_label.Location = new System.Drawing.Point(11, 250);
+            this.TestNum_label.Name = "TestNum_label";
+            this.TestNum_label.Size = new System.Drawing.Size(82, 24);
+            this.TestNum_label.TabIndex = 5;
+            this.TestNum_label.Text = "测试次数";
+            this.TestNum_label.Visible = false;
             // 
-            // label3
+            // TestBlock_label
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(11, 156);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(64, 24);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "块大小";
+            this.TestBlock_label.AutoSize = true;
+            this.TestBlock_label.Location = new System.Drawing.Point(280, 155);
+            this.TestBlock_label.Name = "TestBlock_label";
+            this.TestBlock_label.Size = new System.Drawing.Size(64, 24);
+            this.TestBlock_label.TabIndex = 4;
+            this.TestBlock_label.Text = "块大小";
+            this.TestBlock_label.Visible = false;
             // 
-            // label2
+            // TestPercent_label
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(280, 107);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(82, 24);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "测试容量";
+            this.TestPercent_label.AutoSize = true;
+            this.TestPercent_label.Location = new System.Drawing.Point(280, 107);
+            this.TestPercent_label.Name = "TestPercent_label";
+            this.TestPercent_label.Size = new System.Drawing.Size(82, 24);
+            this.TestPercent_label.TabIndex = 3;
+            this.TestPercent_label.Text = "测试容量";
+            this.TestPercent_label.Visible = false;
             // 
-            // label1
+            // Test_Mode_label
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(11, 58);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(82, 24);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "测试模式";
+            this.Test_Mode_label.AutoSize = true;
+            this.Test_Mode_label.Location = new System.Drawing.Point(11, 58);
+            this.Test_Mode_label.Name = "Test_Mode_label";
+            this.Test_Mode_label.Size = new System.Drawing.Size(82, 24);
+            this.Test_Mode_label.TabIndex = 2;
+            this.Test_Mode_label.Text = "测试模式";
+            this.Test_Mode_label.Visible = false;
             // 
             // TestOrNot
             // 
@@ -314,6 +347,97 @@ namespace DiskTest11
             this.TestOrNot.UseVisualStyleBackColor = true;
             this.TestOrNot.CheckedChanged += new System.EventHandler(this.TestOrNot_CheckedChanged);
             // 
+            // TestTime_S_label
+            // 
+            this.TestTime_S_label.AutoSize = true;
+            this.TestTime_S_label.Location = new System.Drawing.Point(217, 200);
+            this.TestTime_S_label.Name = "TestTime_S_label";
+            this.TestTime_S_label.Size = new System.Drawing.Size(18, 24);
+            this.TestTime_S_label.TabIndex = 30;
+            this.TestTime_S_label.Text = "s";
+            this.TestTime_S_label.Visible = false;
+            this.TestTime_S_label.Click += new System.EventHandler(this.label4_Click);
+            // 
+            // TestTime_M_label
+            // 
+            this.TestTime_M_label.AutoSize = true;
+            this.TestTime_M_label.Location = new System.Drawing.Point(146, 200);
+            this.TestTime_M_label.Name = "TestTime_M_label";
+            this.TestTime_M_label.Size = new System.Drawing.Size(27, 24);
+            this.TestTime_M_label.TabIndex = 32;
+            this.TestTime_M_label.Text = "m";
+            this.TestTime_M_label.Visible = false;
+            // 
+            // TestTime_m
+            // 
+            this.TestTime_m.Location = new System.Drawing.Point(108, 197);
+            this.TestTime_m.Name = "TestTime_m";
+            this.TestTime_m.Size = new System.Drawing.Size(32, 31);
+            this.TestTime_m.TabIndex = 31;
+            this.TestTime_m.Text = "0";
+            this.TestTime_m.Visible = false;
+            // 
+            // TestPercent
+            // 
+            this.TestPercent.Location = new System.Drawing.Point(365, 105);
+            this.TestPercent.Name = "TestPercent";
+            this.TestPercent.Size = new System.Drawing.Size(120, 31);
+            this.TestPercent.TabIndex = 33;
+            this.TestPercent.Tag = "0";
+            this.TestPercent.ThousandsSeparator = true;
+            this.TestPercent.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.TestPercent.Visible = false;
+            // 
+            // ThreadNumble
+            // 
+            this.ThreadNumble.Location = new System.Drawing.Point(365, 248);
+            this.ThreadNumble.Maximum = new decimal(new int[] {
+            64,
+            0,
+            0,
+            0});
+            this.ThreadNumble.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ThreadNumble.Name = "ThreadNumble";
+            this.ThreadNumble.Size = new System.Drawing.Size(120, 31);
+            this.ThreadNumble.TabIndex = 34;
+            this.ThreadNumble.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ThreadNumble.Visible = false;
+            // 
+            // CircleNumble
+            // 
+            this.CircleNumble.Location = new System.Drawing.Point(365, 197);
+            this.CircleNumble.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.CircleNumble.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.CircleNumble.Name = "CircleNumble";
+            this.CircleNumble.Size = new System.Drawing.Size(120, 31);
+            this.CircleNumble.TabIndex = 35;
+            this.CircleNumble.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.CircleNumble.Visible = false;
+            // 
             // Disk
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
@@ -324,6 +448,9 @@ namespace DiskTest11
             this.Text = "Disk";
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TestPercent)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ThreadNumble)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.CircleNumble)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -333,25 +460,30 @@ namespace DiskTest11
         #endregion
         private System.Windows.Forms.GroupBox groupBox2;
         public System.Windows.Forms.ComboBox TestDataMode;
-        public System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox CircleNumble;
-        private System.Windows.Forms.Label label6;
+        public System.Windows.Forms.Label TestDataMode_label;
+        private System.Windows.Forms.Label CircleNum_label;
         private System.Windows.Forms.ComboBox TestMode;
-        private System.Windows.Forms.TextBox TestTime;
+        private System.Windows.Forms.TextBox TestTime_s;
         private System.Windows.Forms.TextBox TestNum;
-        private System.Windows.Forms.TextBox TestPercent;
         private System.Windows.Forms.ComboBox BlockSize;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label TestTime_label;
+        private System.Windows.Forms.Label TestNum_label;
+        private System.Windows.Forms.Label TestBlock_label;
+        private System.Windows.Forms.Label TestPercent_label;
+        private System.Windows.Forms.Label Test_Mode_label;
         private System.Windows.Forms.CheckBox TestOrNot;
         private System.Windows.Forms.Button confirm;
-        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label KB_label;
         private System.Windows.Forms.CheckBox Repeat_Test_Checkbox;
         private System.Windows.Forms.CheckBox Record_CheckBox;
-        private System.Windows.Forms.TextBox ThreadNumble;
-        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label ThreadNum_label;
+        private System.Windows.Forms.RadioButton Choose_TestNumradioButton;
+        private System.Windows.Forms.RadioButton Choose_TestTimeradioButton;
+        private System.Windows.Forms.Label TestTime_S_label;
+        private System.Windows.Forms.Label TestTime_M_label;
+        private System.Windows.Forms.TextBox TestTime_m;
+        private System.Windows.Forms.NumericUpDown TestPercent;
+        private System.Windows.Forms.NumericUpDown ThreadNumble;
+        private System.Windows.Forms.NumericUpDown CircleNumble;
     }
 }

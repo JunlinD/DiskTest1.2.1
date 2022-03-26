@@ -133,8 +133,8 @@ namespace DiskTest11
             this.browse.Enabled = enable;
             this.file_name.Enabled = enable;
             this.file_name2.Enabled = enable;
-            this.singlefile.Enabled = enable;
-            this.stampedfile.Enabled = enable;
+            //this.singlefile.Enabled = enable;
+            //this.stampedfile.Enabled = enable;
             this.label1.Enabled = enable;
             this.label2.Enabled = enable;
         }
@@ -152,6 +152,11 @@ namespace DiskTest11
             {
                 EnableAll(true);
             }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
