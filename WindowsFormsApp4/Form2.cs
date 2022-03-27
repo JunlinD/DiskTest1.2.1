@@ -35,6 +35,7 @@ namespace DiskTest11
             diskSetting.AddLogObserver(new LogEventHandler(logging.LoggingEvent));
             diskSetting.AddAvgSpeedObserver(new AvgSpeedEventHandler(test2.ReceiveAvgSpeedEvent));
             diskSetting.AddCircleNumObserver(new CircleNumHandler(test2.ReceiveCircleNumEvent));
+            
             test2.addSuspendTestOberver(new SuspendTestEventHandler(diskSetting.Get_Suspend_Button_Status_Event));
             test2.addStopTestOberver(new StopTestEventHandler(diskSetting.Get_Stop_Button_Status_Event));
             diskSetting.AddStartTimeObserver(new StartTimeEventHandler(test2.GetStartTimeEvent));

@@ -21,6 +21,8 @@ namespace DiskTestLib
         private System.IO.FileStream _DirverStream;
         private SafeFileHandle _DirverHandle;
         private DiskInformation _DiskInformation;
+        public delegate void SendExceptionLogHandler(int grade,string s);
+        public SendExceptionLogHandler SendlongEvent;
         private int ID;
         /// <summary>
         /// 获取磁盘扇区信息
@@ -87,6 +89,7 @@ namespace DiskTestLib
             _DirverStream.Position = SectorIndex * 512;
             try
             {
+
                 _DirverStream.Write(SectorBytes, 0, 512*blockszie); //写入扇区  
                 //_DirverStream.Position = SectorIndex * (512 + 1);
                 //_DirverStream.Write(SectorBytes, 512, 512);
@@ -95,7 +98,16 @@ namespace DiskTestLib
             catch(Exception e)
             {
                 Console.WriteLine(e);
+                PrintLog(3, e.Message);
             }
+        }
+        public void addSendExceptionLogEvent(SendExceptionLogHandler el)
+        {
+            SendlongEvent += el;
+        }
+        public void PrintLog(int grade,string s)
+        {
+            SendlongEvent(grade,s);
         }
         public DiskInformation DiskInformation { get{ return _DiskInformation; } }
 

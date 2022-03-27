@@ -780,6 +780,7 @@ namespace DiskTest11
             {
                 DiskInformation information = (DiskInformation)Disk_Information_List[i];
                 DriverLoader driver = new DriverLoader(information);
+                driver.addSendExceptionLogEvent(new DriverLoader.SendExceptionLogHandler(PrintLog));
                 Disk_Driver_List.Add(driver);
             }
         }
@@ -2078,10 +2079,10 @@ namespace DiskTest11
                 comparearray=Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, VERTIFY, testarray, comparearray);
                 ErrorNumMutex.WaitOne();
                 Test_Error_Num += VerifyArray(now_pos,testarray, comparearray);
-                for(int z=0;z<10;z++)
+                /*for(int z=0;z<10;z++)
                 {
                     Console.WriteLine("testarray: " + testarray[z] + " comparearray:" + comparearray[z]);
-                }
+                }*/
                 ErrorNumMutex.ReleaseMutex();
                 speed_compute.End_Time = Environment.TickCount;
                 speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
