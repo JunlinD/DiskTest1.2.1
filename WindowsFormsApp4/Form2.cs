@@ -35,17 +35,21 @@ namespace DiskTest11
             diskSetting.AddLogObserver(new LogEventHandler(logging.LoggingEvent));
             diskSetting.AddAvgSpeedObserver(new AvgSpeedEventHandler(test2.ReceiveAvgSpeedEvent));
             diskSetting.AddCircleNumObserver(new CircleNumHandler(test2.ReceiveCircleNumEvent));
+            test2.addSuspendTestOberver(new SuspendTestEventHandler(diskSetting.Get_Suspend_Button_Status_Event));
             test2.addStopTestOberver(new StopTestEventHandler(diskSetting.Get_Stop_Button_Status_Event));
             diskSetting.AddStartTimeObserver(new StartTimeEventHandler(test2.GetStartTimeEvent));
             diskSetting.AddTestEndObserver(new TestEndEventHandler(test2.ReceiveStopTime));
-            TreeNode parent = Aside.CreateNode("Setting", pageIndex);
+            TreeNode parent = Aside.CreateNode("Setting", pageIndex);           
             Aside.CreateChildNode(parent, AddPage(diskSetting, ++pageIndex));
+            
             //Aside.CreateChildNode(parent, AddPage(new Errors(), ++pageIndex));
             Aside.CreateChildNode(parent, AddPage(logging, ++pageIndex));
+            //Aside.GetTreeNode(201).Text = "TestShow";
             pageIndex = 200;
             parent = Aside.CreateNode("Test", pageIndex);
             //Aside.Nodes[201].Name = "TestINF";
-            Aside.CreateChildNode(parent, AddPage(test2, ++pageIndex));
+            TreeNode test_show = Aside.CreateChildNode(parent, AddPage(test2, ++pageIndex));
+            test_show.Text = "TestShow";
             Aside.CreateChildNode(parent, AddPage(log, ++pageIndex));
             //Aside.CreateChildNode(parent, AddPage(new Information(), ++pageIndex));
             Aside.SelectPage(101);

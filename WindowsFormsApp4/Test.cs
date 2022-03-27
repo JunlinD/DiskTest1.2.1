@@ -15,9 +15,12 @@ namespace DiskTest11
     /// 传递点击按钮状态的委托
     /// </summary>
     /// <param name="status"></param>
+    public delegate void SuspendTestEventHandler(bool status);
     public delegate void StopTestEventHandler(bool status);
     public partial class Test2 : Sunny.UI.UIPage
     {
+
+        private bool Suspend_Button_Status;
         private bool Stop_Button_Status;
         //public PercentHandler GetPercent;
         private delegate void ReceiveEventHandler(int now, double speed, double written_MB,string now_time);
@@ -39,10 +42,13 @@ namespace DiskTest11
         private bool Max_Set;
         private float[] data;
         private ArrayList floatarray;
+        public SuspendTestEventHandler SuspendTestEvent;
         public StopTestEventHandler StopTestEvent;
         public Random random;
         public Test2()
         {
+            //this.Name = "TestShow";
+            Suspend_Button_Status = false;
             Stop_Button_Status = false;
             Max_Set = false;
             data = new float[] { };
@@ -55,18 +61,29 @@ namespace DiskTest11
             InitializeComponent();
 
         }
+        public void addSuspendTestOberver(SuspendTestEventHandler suspendTestEvent)
+        {
+            SuspendTestEvent += suspendTestEvent;
+        }
         public void addStopTestOberver(StopTestEventHandler stopTestEvent)
         {
             StopTestEvent += stopTestEvent;
         }
-        public void remoteStopTestOberver(StopTestEventHandler stopTestEvent)
+        public void remoteStopTestOberver(SuspendTestEventHandler stopTestEvent)
         {
-            StopTestEvent -= stopTestEvent;
+            SuspendTestEvent -= stopTestEvent;
         }
         /// <summary>
         /// 传递点击按钮的状态
         /// </summary>
         /// <param name="status">点击按钮的状态</param>
+        public void PublishSuspendTest(bool status)
+        {
+            if(SuspendTestEvent!=null)
+            {
+                SuspendTestEvent(status);
+            }
+        }
         public void PublishStopTest(bool status)
         {
             if(StopTestEvent!=null)
@@ -229,6 +246,19 @@ namespace DiskTest11
             userCurve1.RemoveCurve("SPEED");
             data=new float[] { };
             this.userCurve1.SetLeftCurve("SPEED", data, Color.Tomato);
+            userCurve1.ValueMaxLeft = 5;// 向上取整
+            userCurve1.ValueMinLeft = 1;
+            Max_Speed = 5;
+            Min_Speed = 1;
+            if (ContinueButton.Visible == true)
+                ContinueButton.Visible = false;
+            if (StopButton.Visible == true)
+                StopButton.Visible = false;
+            if (SuspendButton.Visible == false)
+                SuspendButton.Visible = true;
+            Suspend_Button_Status = false;
+            Stop_Button_Status = false;
+
         }
         public void ComputeTestTimeEvent()
         {
@@ -278,49 +308,54 @@ namespace DiskTest11
 
         }
 
-        private void StopButton_Click(object sender, EventArgs e)
+        private void SuspendButton_Click(object sender, EventArgs e)
         {
-            if(Stop_Button_Status==false)//假如这时候还没有被点击
+            if(Suspend_Button_Status==false&&!Stop_Button_Status)//假如这时候还没有被点击
             {
-                PublishStopTest(Stop_Button_Status);//广播状态，暂停测试线程的执行,将false传给DiskSetting
-                Stop_Button_Status = true;
-                this.StopButton.Text = "Start";
+                PublishSuspendTest(Suspend_Button_Status);//广播状态，暂停测试线程的执行,将false传给DiskSetting
+                Suspend_Button_Status = true;
+                //this.SuspendButton.Text = "Start";
                 //Gap_Start_Time = DateTime.Now;
                 timer.Stop();
                 TestTime.Stop();
+                this.SuspendButton.Visible = false;
+                this.StopButton.Visible = true;
+                this.ContinueButton.Visible = true;
             }
-            else
+            
+        }
+        private void ContinueButton_Click(object sender, EventArgs e)
+        {
+            if (Suspend_Button_Status == true&&!Stop_Button_Status)
             {
-                PublishStopTest(Stop_Button_Status);
-                Stop_Button_Status = false;
-                this.StopButton.Text = "Stop";
-                //Gap_End_Time = DateTime.Now;
-                //TimeSpan span = Gap_End_Time - Gap_Start_Time;
-                //Gap_Time += span;
+                PublishSuspendTest(Suspend_Button_Status);
+                Suspend_Button_Status = false;
+                this.ContinueButton.Visible = false;
+                this.StopButton.Visible = false;
+                this.SuspendButton.Visible = true;
                 timer.Start();
                 TestTime.Start();
             }
         }
-
-        private float[] GetRandomValueByCount(int count, float min, float max)
+        private void StopButton_Click(object sender, EventArgs e)
         {
-            float[] data = new float[count];
-            for (int i = 0; i < data.Length; i++)
+            //if (Suspend_Button_Status == true || Stop_Button_Status == false)
+            //{
+                //PublishSuspendTest(Suspend_Button_Status);
+            if(Stop_Button_Status==false)
             {
-                data[i] = (float)random.NextDouble() * (max - min) + min;
+                PublishStopTest(Stop_Button_Status);
+                Stop_Button_Status = true;
             }
-            return data;
+            
+                //Suspend_Button_Status = false;
+                //this.ContinueButton.Visible = false;
+                //this.StopButton.Visible = false;
+                //timer.Start();
+                //TestTime.Start();
+            //}
         }
-
-        private void uiFlowLayoutPanel1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void uiProcessBar1_ValueChanged(object sender, int value)
-        {
-
-        }
+        
 
         private void tableLayoutPanel3_Paint(object sender, PaintEventArgs e)
         {
@@ -333,6 +368,11 @@ namespace DiskTest11
         }
 
         private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void uiButton1_Click(object sender, EventArgs e)
         {
 
         }

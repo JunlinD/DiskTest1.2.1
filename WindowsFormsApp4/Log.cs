@@ -44,7 +44,7 @@ namespace DiskTest11
                 ActivityLogTextBox.SelectionColor = Color.Red;
             else
                 ActivityLogTextBox.SelectionColor = Color.Black;
-            ActivityLogTextBox.AppendText(s+ "\r\n");
+            ActivityLogTextBox.AppendText(s);
         }
 
         private void ActivityLogTextBox_TextChanged(object sender, EventArgs e)

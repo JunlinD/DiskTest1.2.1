@@ -31,13 +31,15 @@ namespace DiskTest11
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.StopButton = new Sunny.UI.UIButton();
+            this.ContinueButton = new Sunny.UI.UIButton();
             this.Duration_Time_Show = new Sunny.UI.UILabel();
             this.uiLabel16 = new Sunny.UI.UILabel();
             this.Start_Time_Show = new Sunny.UI.UILabel();
             this.uiLabel14 = new Sunny.UI.UILabel();
             this.uiLabel13 = new Sunny.UI.UILabel();
             this.uiLabel12 = new Sunny.UI.UILabel();
-            this.StopButton = new Sunny.UI.UIButton();
+            this.SuspendButton = new Sunny.UI.UIButton();
             this.uiFlowLayoutPanel1 = new Sunny.UI.UIFlowLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.uiProcessBar1 = new Sunny.UI.UIProcessBar();
@@ -85,19 +87,49 @@ namespace DiskTest11
             // 
             this.groupBox1.AutoSize = true;
             this.groupBox1.BackColor = System.Drawing.SystemColors.Menu;
+            this.groupBox1.Controls.Add(this.StopButton);
+            this.groupBox1.Controls.Add(this.ContinueButton);
             this.groupBox1.Controls.Add(this.Duration_Time_Show);
             this.groupBox1.Controls.Add(this.uiLabel16);
             this.groupBox1.Controls.Add(this.Start_Time_Show);
             this.groupBox1.Controls.Add(this.uiLabel14);
             this.groupBox1.Controls.Add(this.uiLabel13);
             this.groupBox1.Controls.Add(this.uiLabel12);
-            this.groupBox1.Controls.Add(this.StopButton);
+            this.groupBox1.Controls.Add(this.SuspendButton);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(814, 189);
             this.groupBox1.TabIndex = 23;
             this.groupBox1.TabStop = false;
+            // 
+            // StopButton
+            // 
+            this.StopButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.StopButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.StopButton.Location = new System.Drawing.Point(53, 87);
+            this.StopButton.MinimumSize = new System.Drawing.Size(1, 1);
+            this.StopButton.Name = "StopButton";
+            this.StopButton.Radius = 50;
+            this.StopButton.Size = new System.Drawing.Size(163, 57);
+            this.StopButton.TabIndex = 29;
+            this.StopButton.Text = "Stop";
+            this.StopButton.Visible = false;
+            this.StopButton.Click += new System.EventHandler(this.StopButton_Click);
+            // 
+            // ContinueButton
+            // 
+            this.ContinueButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.ContinueButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ContinueButton.Location = new System.Drawing.Point(56, 24);
+            this.ContinueButton.MinimumSize = new System.Drawing.Size(1, 1);
+            this.ContinueButton.Name = "ContinueButton";
+            this.ContinueButton.Radius = 50;
+            this.ContinueButton.Size = new System.Drawing.Size(163, 57);
+            this.ContinueButton.TabIndex = 28;
+            this.ContinueButton.Text = "Continue";
+            this.ContinueButton.Visible = false;
+            this.ContinueButton.Click += new System.EventHandler(this.ContinueButton_Click);
             // 
             // Duration_Time_Show
             // 
@@ -160,18 +192,18 @@ namespace DiskTest11
             this.uiLabel12.Text = "Start Time:";
             this.uiLabel12.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // StopButton
+            // SuspendButton
             // 
-            this.StopButton.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.StopButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.StopButton.Location = new System.Drawing.Point(56, 24);
-            this.StopButton.MinimumSize = new System.Drawing.Size(1, 1);
-            this.StopButton.Name = "StopButton";
-            this.StopButton.Radius = 50;
-            this.StopButton.Size = new System.Drawing.Size(160, 108);
-            this.StopButton.TabIndex = 21;
-            this.StopButton.Text = "Stop";
-            this.StopButton.Click += new System.EventHandler(this.StopButton_Click);
+            this.SuspendButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.SuspendButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.SuspendButton.Location = new System.Drawing.Point(56, 24);
+            this.SuspendButton.MinimumSize = new System.Drawing.Size(1, 1);
+            this.SuspendButton.Name = "SuspendButton";
+            this.SuspendButton.Radius = 50;
+            this.SuspendButton.Size = new System.Drawing.Size(160, 108);
+            this.SuspendButton.TabIndex = 21;
+            this.SuspendButton.Text = "Suspend";
+            this.SuspendButton.Click += new System.EventHandler(this.SuspendButton_Click);
             // 
             // uiFlowLayoutPanel1
             // 
@@ -191,7 +223,6 @@ namespace DiskTest11
             this.uiFlowLayoutPanel1.TabIndex = 24;
             this.uiFlowLayoutPanel1.Text = "uiFlowLayoutPanel1";
             this.uiFlowLayoutPanel1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            this.uiFlowLayoutPanel1.Click += new System.EventHandler(this.uiFlowLayoutPanel1_Click);
             // 
             // tableLayoutPanel2
             // 
@@ -220,7 +251,6 @@ namespace DiskTest11
             this.uiProcessBar1.Size = new System.Drawing.Size(588, 30);
             this.uiProcessBar1.TabIndex = 3;
             this.uiProcessBar1.Text = "uiProcessBar1";
-            this.uiProcessBar1.ValueChanged += new Sunny.UI.UIProcessBar.OnValueChanged(this.uiProcessBar1_ValueChanged);
             // 
             // label1
             // 
@@ -401,7 +431,7 @@ namespace DiskTest11
         private Sunny.UI.UILabel uiLabel14;
         private Sunny.UI.UILabel uiLabel13;
         private Sunny.UI.UILabel uiLabel12;
-        private Sunny.UI.UIButton StopButton;
+        private Sunny.UI.UIButton SuspendButton;
         private Sunny.UI.UIFlowLayoutPanel uiFlowLayoutPanel1;
         private Sunny.UI.UIProcessBar uiProcessBar1;
         private HslCommunication.Controls.UserCurve userCurve1;
@@ -416,5 +446,7 @@ namespace DiskTest11
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label Circle_Num_Label;
+        private Sunny.UI.UIButton ContinueButton;
+        private Sunny.UI.UIButton StopButton;
     }
 }

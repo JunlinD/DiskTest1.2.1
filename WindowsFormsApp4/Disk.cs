@@ -420,6 +420,7 @@ namespace DiskTest11
             TestTime_s.Visible = false;
             TestTime_label.Visible = false;
             TestTime_m.Visible = false;
+            TestTime_m.Text = "0";
             TestTime_M_label.Visible = false;
             TestNum.Visible = true;
             TestNum_label.Visible = true;
