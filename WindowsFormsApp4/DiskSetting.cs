@@ -1269,7 +1269,7 @@ namespace DiskTest11
         /// <param name="comparearray"></param>
         /// <returns></returns>
         /// 
-        public int VerifyArray(byte[] testarray, byte[] comparearray)
+        public int VerifyArray(long now_pos,byte[] testarray, byte[] comparearray)
         {
             int error_num = 0;
             if (testarray.Length != comparearray.Length)
@@ -1285,7 +1285,10 @@ namespace DiskTest11
                     Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss") + "当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]);
                     this.PrintLog(ERROR,DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss") + "当前位置" + i + "出错，正确数据为" + testarray[i] + "错误数据为：" + comparearray[i]+"\n");
                     error_num++;
+                    this.PrintLog(ERROR, "当前块"+now_pos+"出现错误！位置在"+(now_pos+i/512)+"扇区,第"+i%512+"的位置上\n");
+                    break;
                 }
+                
             }
             return error_num;
 
@@ -1441,7 +1444,7 @@ namespace DiskTest11
                 speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
                 speed_compute.Total_Time += speed_compute.Once_Time;
                 ErrorNumMutex.WaitOne();
-                Test_Error_Num += VerifyArray(testarray, comparearray);
+                Test_Error_Num += VerifyArray(now_pos,testarray, comparearray);
                 ErrorNumMutex.ReleaseMutex();
                 Test_End_Time = Environment.TickCount;
                 Add_Bytes();
@@ -1502,7 +1505,7 @@ namespace DiskTest11
                 Test_End_Time = Environment.TickCount;
                 Add_Bytes();
                 Now_Pos += block_size;
-                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                //Test_Error_Num += VerifyArray(now_pos,TestArray, CompareArray);
                 Percent = (int)(Now_Pos * 100 / Order_Max_Block);
                 if (Temp_Nums % Fast_INR == 0 || Percent >= 100)
                 {
@@ -1544,7 +1547,7 @@ namespace DiskTest11
                 block_size = Compute_Last_Block_Size(block_size);
                 Init_TestArray(block_size, data_mode);
                 Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
-                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                //Test_Error_Num += VerifyArray(now_pos,TestArray, CompareArray);
                 Test_End_Time = Environment.TickCount;
                 Add_Bytes();
                 Console.WriteLine(Now_Pos);
@@ -1997,6 +2000,7 @@ namespace DiskTest11
                 recordTest.Random_Record_Mode(RANDOM_VERTIFY, info.TestDataMode, info.BlockSize, info.TestTime, info.TestNum, info.ThreadNum);
                 recordTest.Finish();
             }
+            Console.WriteLine("----info.datamode is :" + info.TestDataMode);
             Thread[] threads = new Thread[info.ThreadNum];
             DriverLoader driver = (DriverLoader)Disk_Driver_List[info.DriverIndex];
             resetEvents = new AutoResetEvent[info.ThreadNum];
@@ -2068,12 +2072,16 @@ namespace DiskTest11
                 //BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
                 byte[] comparearray = new byte[BYTE_SIZE];
                 byte[] testarray = new byte[BYTE_SIZE];
-                testarray = Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode, testarray);
+                testarray = Init_TestArraymulti(BYTE_SIZE, 2, testarray);
                 //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
                 speed_compute.Start_Time = Environment.TickCount;
                 comparearray=Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, VERTIFY, testarray, comparearray);
                 ErrorNumMutex.WaitOne();
-                Test_Error_Num += VerifyArray(testarray, comparearray);
+                Test_Error_Num += VerifyArray(now_pos,testarray, comparearray);
+                for(int z=0;z<10;z++)
+                {
+                    Console.WriteLine("testarray: " + testarray[z] + " comparearray:" + comparearray[z]);
+                }
                 ErrorNumMutex.ReleaseMutex();
                 speed_compute.End_Time = Environment.TickCount;
                 speed_compute.Once_Time = speed_compute.End_Time - speed_compute.Start_Time;
@@ -2156,7 +2164,7 @@ namespace DiskTest11
                 Now_Pos = NextLong(0, driver.DiskInformation.DiskSectorSize - block_size);
                 recordTest.Random_Record_Sector(Now_Pos);
                 Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
-                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                //Test_Error_Num += VerifyArray(TestArray, CompareArray);
                 Test_End_Time = Environment.TickCount;
                 Add_Bytes();
                 Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
@@ -2205,7 +2213,7 @@ namespace DiskTest11
                 //Console.WriteLine(Now_Pos);
                 //recordTest.Random_Record_Sector(Now_Pos);
                 Compute_OnceBlockTime(driver, Now_Pos, block_size, VERTIFY);
-                Test_Error_Num += VerifyArray(TestArray, CompareArray);
+                //Test_Error_Num += VerifyArray(TestArray, CompareArray);
                 Test_End_Time = Environment.TickCount;
                 Add_Bytes();
                 Percent = (test_num == 0) ? (int)(100 * (Test_End_Time - Test_Start_Time) / test_time) : (int)(100 * Temp_Nums / test_num);
@@ -2305,7 +2313,7 @@ namespace DiskTest11
                 //BYTE_SIZE = BLOCK_SIZE * DEAFAUT_BLOCKSIZE;
                 byte[] comparearray = new byte[BYTE_SIZE];
                 byte[] testarray = new byte[BYTE_SIZE];
-                testarray = Init_TestArraymulti(BYTE_SIZE, info.chooseInformation.TestDataMode, testarray);
+                testarray = Init_TestArraymulti(BYTE_SIZE, 2, testarray);
                 //Console.WriteLine("线程 "+info.threadIndex+" 准备获取信号量---------------");
                 speed_compute.Start_Time = Environment.TickCount;
                 Compute_OnceBlockTimemulti(info.driverLoader, now_pos, BLOCK_SIZE, WRITE, testarray, comparearray);
